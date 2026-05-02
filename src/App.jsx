@@ -13,11 +13,45 @@ const createDay = (number) => ({
   ],
 });
 
+const createCrewMember = () => ({
+  id: Date.now() + Math.random(),
+  name: "",
+  role: "",
+  callTime: "",
+  phone: "",
+  responsibility: "",
+});
+
+const createClient = () => ({
+  id: Date.now() + Math.random(),
+  name: "",
+  role: "",
+  callTime: "",
+  contact: "",
+  notes: "",
+});
+
 export default function App() {
   const [projectName, setProjectName] = useState("");
   const [clientName, setClientName] = useState("");
   const [shootDays, setShootDays] = useState([createDay(1)]);
   const [activeDayIndex, setActiveDayIndex] = useState(0);
+
+  const [crew, setCrew] = useState([
+    {
+      ...createCrewMember(),
+      role: "DP / Producer",
+      callTime: "8:30 AM",
+    },
+  ]);
+
+  const [clients, setClients] = useState([
+    {
+      ...createClient(),
+      role: "Client Contact",
+      callTime: "No Call",
+    },
+  ]);
 
   const activeDay = shootDays[activeDayIndex];
 
@@ -94,6 +128,42 @@ export default function App() {
     );
   };
 
+  const updateCrew = (crewIndex, field, value) => {
+    setCrew((items) =>
+      items.map((item, index) =>
+        index === crewIndex ? { ...item, [field]: value } : item
+      )
+    );
+  };
+
+  const addCrewMember = () => {
+    setCrew((items) => [...items, createCrewMember()]);
+  };
+
+  const removeCrewMember = (crewIndex) => {
+    setCrew((items) =>
+      items.length > 1 ? items.filter((_, index) => index !== crewIndex) : items
+    );
+  };
+
+  const updateClient = (clientIndex, field, value) => {
+    setClients((items) =>
+      items.map((item, index) =>
+        index === clientIndex ? { ...item, [field]: value } : item
+      )
+    );
+  };
+
+  const addClient = () => {
+    setClients((items) => [...items, createClient()]);
+  };
+
+  const removeClient = (clientIndex) => {
+    setClients((items) =>
+      items.length > 1 ? items.filter((_, index) => index !== clientIndex) : items
+    );
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -116,7 +186,8 @@ export default function App() {
               border: none !important;
             }
 
-            .day-section {
+            .day-section,
+            .people-section {
               page-break-inside: avoid;
             }
           }
@@ -125,7 +196,7 @@ export default function App() {
 
       <div className="no-print" style={styles.editor}>
         <h1>CIF Call Sheet Builder</h1>
-        <p style={styles.muted}>Phase 1: Multi-day shoot + schedule</p>
+        <p style={styles.muted}>Phase 2: Crew + Clients</p>
 
         <Section title="Project Info">
           <Input
@@ -208,33 +279,25 @@ export default function App() {
               <Input
                 label="Time"
                 value={item.time}
-                onChange={(value) =>
-                  updateScheduleItem(index, "time", value)
-                }
+                onChange={(value) => updateScheduleItem(index, "time", value)}
               />
 
               <Input
                 label="Activity"
                 value={item.activity}
-                onChange={(value) =>
-                  updateScheduleItem(index, "activity", value)
-                }
+                onChange={(value) => updateScheduleItem(index, "activity", value)}
               />
 
               <Input
                 label="Location"
                 value={item.location}
-                onChange={(value) =>
-                  updateScheduleItem(index, "location", value)
-                }
+                onChange={(value) => updateScheduleItem(index, "location", value)}
               />
 
               <Textarea
                 label="Notes"
                 value={item.notes}
-                onChange={(value) =>
-                  updateScheduleItem(index, "notes", value)
-                }
+                onChange={(value) => updateScheduleItem(index, "notes", value)}
               />
 
               <button
@@ -248,6 +311,108 @@ export default function App() {
 
           <button onClick={addScheduleItem} style={styles.secondaryButton}>
             + Add Schedule Item
+          </button>
+        </Section>
+
+        <Section title="Crew / Vendors">
+          {crew.map((member, index) => (
+            <div key={member.id} style={styles.card}>
+              <Input
+                label="Name"
+                value={member.name}
+                onChange={(value) => updateCrew(index, "name", value)}
+                placeholder="Crew member name"
+              />
+
+              <Input
+                label="Role"
+                value={member.role}
+                onChange={(value) => updateCrew(index, "role", value)}
+                placeholder="Example: Audio Tech"
+              />
+
+              <Input
+                label="Call Time"
+                value={member.callTime}
+                onChange={(value) => updateCrew(index, "callTime", value)}
+                placeholder="Example: 8:30 AM"
+              />
+
+              <Input
+                label="Phone"
+                value={member.phone}
+                onChange={(value) => updateCrew(index, "phone", value)}
+                placeholder="Example: (555) 123-4567"
+              />
+
+              <Textarea
+                label="Responsibilities"
+                value={member.responsibility}
+                onChange={(value) => updateCrew(index, "responsibility", value)}
+              />
+
+              <button
+                onClick={() => removeCrewMember(index)}
+                style={styles.smallDangerButton}
+              >
+                Remove Crew Member
+              </button>
+            </div>
+          ))}
+
+          <button onClick={addCrewMember} style={styles.secondaryButton}>
+            + Add Crew / Vendor
+          </button>
+        </Section>
+
+        <Section title="Clients / Talent">
+          {clients.map((client, index) => (
+            <div key={client.id} style={styles.card}>
+              <Input
+                label="Name"
+                value={client.name}
+                onChange={(value) => updateClient(index, "name", value)}
+                placeholder="Client or talent name"
+              />
+
+              <Input
+                label="Role"
+                value={client.role}
+                onChange={(value) => updateClient(index, "role", value)}
+                placeholder="Example: Interview Subject"
+              />
+
+              <Input
+                label="Call Time"
+                value={client.callTime}
+                onChange={(value) => updateClient(index, "callTime", value)}
+                placeholder="Example: 10:00 AM"
+              />
+
+              <Input
+                label="Contact Info"
+                value={client.contact}
+                onChange={(value) => updateClient(index, "contact", value)}
+                placeholder="Phone or email"
+              />
+
+              <Textarea
+                label="Notes"
+                value={client.notes}
+                onChange={(value) => updateClient(index, "notes", value)}
+              />
+
+              <button
+                onClick={() => removeClient(index)}
+                style={styles.smallDangerButton}
+              >
+                Remove Client / Talent
+              </button>
+            </div>
+          ))}
+
+          <button onClick={addClient} style={styles.secondaryButton}>
+            + Add Client / Talent
           </button>
         </Section>
 
@@ -314,6 +479,62 @@ export default function App() {
             </table>
           </div>
         ))}
+
+        <div className="people-section" style={styles.peopleSection}>
+          <h2 style={styles.previewSectionTitle}>Crew / Vendors</h2>
+
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.th}>Name</th>
+                <th style={styles.th}>Role</th>
+                <th style={styles.th}>Call</th>
+                <th style={styles.th}>Phone</th>
+                <th style={styles.th}>Responsibilities</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {crew.map((member) => (
+                <tr key={member.id}>
+                  <td style={styles.tdStrong}>{member.name || "Crew Member"}</td>
+                  <td style={styles.td}>{member.role || "—"}</td>
+                  <td style={styles.td}>{member.callTime || "—"}</td>
+                  <td style={styles.td}>{member.phone || "—"}</td>
+                  <td style={styles.td}>{member.responsibility || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="people-section" style={styles.peopleSection}>
+          <h2 style={styles.previewSectionTitle}>Clients / Talent</h2>
+
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.th}>Name</th>
+                <th style={styles.th}>Role</th>
+                <th style={styles.th}>Call</th>
+                <th style={styles.th}>Contact</th>
+                <th style={styles.th}>Notes</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {clients.map((client) => (
+                <tr key={client.id}>
+                  <td style={styles.tdStrong}>{client.name || "Client / Talent"}</td>
+                  <td style={styles.td}>{client.role || "—"}</td>
+                  <td style={styles.td}>{client.callTime || "—"}</td>
+                  <td style={styles.td}>{client.contact || "—"}</td>
+                  <td style={styles.td}>{client.notes || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -566,6 +787,15 @@ const styles = {
     fontSize: 14,
     color: "#475569",
     lineHeight: 1.6,
+  },
+  peopleSection: {
+    marginTop: 36,
+  },
+  previewSectionTitle: {
+    borderBottom: "4px solid #020617",
+    paddingBottom: 8,
+    marginBottom: 16,
+    fontSize: 24,
   },
   table: {
     width: "100%",
