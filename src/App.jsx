@@ -571,7 +571,9 @@ const clearLogo = () => {
   Project: {projectName || "Name"}
 </h1>
             <h2 style={styles.projectTitle}>CALL SHEET</h2>
-            <p style={styles.clientText}>{clientName || "Client Name"}</p>
+            <p style={styles.clientText}>
+  Client: {clientName || "Name"}
+</p>
           </div>
 
           {logo ? (
