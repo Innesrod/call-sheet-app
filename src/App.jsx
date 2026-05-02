@@ -270,6 +270,27 @@ const clearLogo = () => {
           />
         </Section>
 
+<Section title="Logo / Branding">
+  <label style={styles.label}>
+    Upload CIF Logo
+    <input
+      type="file"
+      accept="image/*"
+      onChange={(event) => handleLogoUpload(event.target.files?.[0])}
+      style={styles.input}
+    />
+  </label>
+
+  {logo && (
+    <>
+      <img src={logo} alt="CIF Logo" style={styles.logoPreview} />
+      <button onClick={clearLogo} style={styles.smallDangerButton}>
+        Clear Logo
+      </button>
+    </>
+  )}
+</Section>
+        
         <Section title="Shoot Days">
           <div style={styles.dayTabs}>
             {shootDays.map((day, index) => (
