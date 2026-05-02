@@ -49,9 +49,9 @@ export default function App() {
   const [projectName, setProjectName] = useState("");
   const [clientName, setClientName] = useState("");
   const [logo, setLogo] = useState("");
+
   const [shootDays, setShootDays] = useState([createDay(1)]);
   const [activeDayIndex, setActiveDayIndex] = useState(0);
-  
 
   const [crew, setCrew] = useState([
     {
@@ -206,20 +206,21 @@ export default function App() {
   };
 
   const handleLogoUpload = (file) => {
-  if (!file) return;
+    if (!file) return;
 
-  const reader = new FileReader();
+    const reader = new FileReader();
 
-  reader.onload = () => {
-    setLogo(reader.result);
+    reader.onload = () => {
+      setLogo(reader.result);
+    };
+
+    reader.readAsDataURL(file);
   };
 
-  reader.readAsDataURL(file);
-};
+  const clearLogo = () => {
+    setLogo("");
+  };
 
-const clearLogo = () => {
-  setLogo("");
-};
   const handlePrint = () => {
     window.print();
   };
@@ -253,45 +254,46 @@ const clearLogo = () => {
 
       <div className="no-print" style={styles.editor}>
         <h1>CIF Call Sheet Builder</h1>
-        <p style={styles.muted}>Phase 3: Locations + Maps</p>
+        <p style={styles.muted}>Stable version: Days, Schedule, Crew, Clients, Locations, Logo</p>
 
         <Section title="Project Info">
           <Input
             label="Project Name"
             value={projectName}
             onChange={setProjectName}
-            placeholder="Enter project name here"
-            
+            placeholder="Example: Climb to End Cancer"
           />
           <Input
             label="Client Name"
             value={clientName}
             onChange={setClientName}
-            placeholder="Example: Enter client name"
+            placeholder="Example: American Cancer Society"
           />
         </Section>
 
-<Section title="Logo / Branding">
-  <label style={styles.label}>
-    Upload CIF Logo
-    <input
-      type="file"
-      accept="image/*"
-      onChange={(event) => handleLogoUpload(event.target.files?.[0])}
-      style={styles.input}
-    />
-  </label>
+        <Section title="Logo / Branding">
+          <label style={styles.label}>
+            Upload CIF Logo
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(event) => handleLogoUpload(event.target.files?.[0])}
+              style={styles.input}
+            />
+          </label>
 
-  {logo && (
-    <>
-      <img src={logo} alt="CIF Logo" style={styles.logoPreview} />
-      <button onClick={clearLogo} style={styles.smallDangerButton}>
-        Clear Logo
-      </button>
-    </>
-  )}
-</Section>
-        
+          {logo ? (
+            <>
+              <img src={logo} alt="CIF Logo" style={styles.logoPreview} />
+              <button onClick={clearLogo} style={styles.smallDangerButton}>
+                Clear Logo
+              </button>
+            </>
+          ) : (
+            <p style={styles.helperText}>No logo uploaded yet. CIF fallback will show.</p>
+          )}
+        </Section>
+
         <Section title="Shoot Days">
           <div style={styles.dayTabs}>
             {shootDays.map((day, index) => (
@@ -568,20 +570,19 @@ const clearLogo = () => {
           <div>
             <div style={styles.eyebrow}>Production Call Sheet</div>
             <h1 style={styles.previewTitle}>
-  Project: {projectName || "Name"}
-</h1>
+              Project: {projectName || "Name"}
+            </h1>
             <h2 style={styles.projectTitle}>CALL SHEET</h2>
-            <p style={{ color: "#020617", fontWeight: 700, fontSize: 16 }}>
-  <p style={{ color: "black", fontWeight: "900", fontSize: 18 }}>
-  Client: {clientName || "Name"}
-</p>
+            <p style={styles.clientText}>
+              Client: {clientName || "Name"}
+            </p>
           </div>
 
           {logo ? (
-  <img src={logo} alt="CIF Logo" style={styles.logoImage} />
-) : (
-  <div style={styles.logoBox}>CIF</div>
-)}
+            <img src={logo} alt="CIF Logo" style={styles.logoImage} />
+          ) : (
+            <div style={styles.logoBox}>CIF</div>
+          )}
         </div>
 
         {shootDays.map((day) => (
@@ -804,6 +805,11 @@ const styles = {
     color: "#64748b",
     marginTop: -10,
   },
+  helperText: {
+    color: "#64748b",
+    fontSize: 13,
+    margin: 0,
+  },
   section: {
     background: "white",
     borderRadius: 16,
@@ -941,21 +947,21 @@ const styles = {
     color: "#64748b",
   },
   previewTitle: {
-    fontSize: 30,
+    fontSize: 28,
     margin: "8px 0",
-    letterSpacing: -2,
+    letterSpacing: -0.5,
+    color: "#020617",
   },
   projectTitle: {
     margin: 0,
-    fontSize: 22,
+    fontSize: 18,
+    color: "#020617",
   },
- clientText: {
-  color: "#020617",
-  fontWeight: "700",
-  fontSize: 16,
-}, {
-    color: "#64748b",
-    fontWeight: "bold",
+  clientText: {
+    color: "#020617",
+    fontWeight: "900",
+    fontSize: 18,
+    marginTop: 10,
   },
   logoBox: {
     width: 90,
@@ -968,6 +974,21 @@ const styles = {
     fontWeight: "900",
     fontSize: 28,
     borderRadius: 16,
+    flexShrink: 0,
+  },
+  logoPreview: {
+    maxWidth: 160,
+    maxHeight: 80,
+    objectFit: "contain",
+    border: "1px solid #e2e8f0",
+    borderRadius: 12,
+    padding: 8,
+    background: "white",
+  },
+  logoImage: {
+    maxWidth: 160,
+    maxHeight: 90,
+    objectFit: "contain",
     flexShrink: 0,
   },
   daySection: {
@@ -1036,20 +1057,4 @@ const styles = {
     verticalAlign: "top",
     fontWeight: "900",
   },
-  logoPreview: {
-  maxWidth: 160,
-  maxHeight: 80,
-  objectFit: "contain",
-  border: "1px solid #e2e8f0",
-  borderRadius: 12,
-  padding: 8,
-  background: "white",
-},
-
-logoImage: {
-  maxWidth: 200,
-  maxHeight: 100,
-  objectFit: "contain",
-  flexShrink: 0,
-},
 };
