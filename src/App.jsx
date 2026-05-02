@@ -572,6 +572,7 @@ const clearLogo = () => {
 </h1>
             <h2 style={styles.projectTitle}>CALL SHEET</h2>
             <p style={{ color: "#020617", fontWeight: 700, fontSize: 16 }}>
+  <p style={{ color: "black", fontWeight: "900", fontSize: 18 }}>
   Client: {clientName || "Name"}
 </p>
           </div>
