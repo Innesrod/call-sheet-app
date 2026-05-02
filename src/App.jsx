@@ -1,4 +1,14 @@
 import React, { useState } from "react";
+const STORAGE_KEY = "cif-call-sheet-project";
+
+function saveToBrowser(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadFromBrowser() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  return saved ? JSON.parse(saved) : null;
+}
 
 const createDay = (number) => ({
   id: Date.now() + Math.random(),
