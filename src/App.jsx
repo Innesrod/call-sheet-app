@@ -1028,4 +1028,20 @@ const styles = {
     verticalAlign: "top",
     fontWeight: "900",
   },
+  logoPreview: {
+  maxWidth: 160,
+  maxHeight: 80,
+  objectFit: "contain",
+  border: "1px solid #e2e8f0",
+  borderRadius: 12,
+  padding: 8,
+  background: "white",
+},
+
+logoImage: {
+  maxWidth: 160,
+  maxHeight: 90,
+  objectFit: "contain",
+  flexShrink: 0,
+},
 };
