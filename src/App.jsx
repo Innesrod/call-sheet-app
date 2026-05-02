@@ -31,6 +31,20 @@ const createClient = () => ({
   notes: "",
 });
 
+const createLocation = () => ({
+  id: Date.now() + Math.random(),
+  name: "",
+  address: "",
+  parking: "",
+  loadIn: "",
+  notes: "",
+});
+
+const getMapLink = (address) => {
+  if (!address) return "";
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+};
+
 export default function App() {
   const [projectName, setProjectName] = useState("");
   const [clientName, setClientName] = useState("");
@@ -50,6 +64,13 @@ export default function App() {
       ...createClient(),
       role: "Client Contact",
       callTime: "No Call",
+    },
+  ]);
+
+  const [locations, setLocations] = useState([
+    {
+      ...createLocation(),
+      name: "Main Location",
     },
   ]);
 
@@ -164,6 +185,24 @@ export default function App() {
     );
   };
 
+  const updateLocation = (locationIndex, field, value) => {
+    setLocations((items) =>
+      items.map((item, index) =>
+        index === locationIndex ? { ...item, [field]: value } : item
+      )
+    );
+  };
+
+  const addLocation = () => {
+    setLocations((items) => [...items, createLocation()]);
+  };
+
+  const removeLocation = (locationIndex) => {
+    setLocations((items) =>
+      items.length > 1 ? items.filter((_, index) => index !== locationIndex) : items
+    );
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -187,7 +226,8 @@ export default function App() {
             }
 
             .day-section,
-            .people-section {
+            .people-section,
+            .location-section {
               page-break-inside: avoid;
             }
           }
@@ -196,7 +236,7 @@ export default function App() {
 
       <div className="no-print" style={styles.editor}>
         <h1>CIF Call Sheet Builder</h1>
-        <p style={styles.muted}>Phase 2: Crew + Clients</p>
+        <p style={styles.muted}>Phase 3: Locations + Maps</p>
 
         <Section title="Project Info">
           <Input
@@ -292,6 +332,7 @@ export default function App() {
                 label="Location"
                 value={item.location}
                 onChange={(value) => updateScheduleItem(index, "location", value)}
+                placeholder="Example: Main Location"
               />
 
               <Textarea
@@ -311,6 +352,68 @@ export default function App() {
 
           <button onClick={addScheduleItem} style={styles.secondaryButton}>
             + Add Schedule Item
+          </button>
+        </Section>
+
+        <Section title="Locations / Maps">
+          {locations.map((location, index) => (
+            <div key={location.id} style={styles.card}>
+              <Input
+                label="Location Name"
+                value={location.name}
+                onChange={(value) => updateLocation(index, "name", value)}
+                placeholder="Example: Main Studio"
+              />
+
+              <Textarea
+                label="Address"
+                value={location.address}
+                onChange={(value) => updateLocation(index, "address", value)}
+                placeholder="Full address or city/state"
+              />
+
+              {location.address && (
+                <a
+                  href={getMapLink(location.address)}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={styles.mapLink}
+                >
+                  Open in Google Maps
+                </a>
+              )}
+
+              <Textarea
+                label="Parking"
+                value={location.parking}
+                onChange={(value) => updateLocation(index, "parking", value)}
+                placeholder="Parking lot, garage, access notes"
+              />
+
+              <Textarea
+                label="Load-In"
+                value={location.loadIn}
+                onChange={(value) => updateLocation(index, "loadIn", value)}
+                placeholder="Where crew should unload / enter"
+              />
+
+              <Textarea
+                label="Location Notes"
+                value={location.notes}
+                onChange={(value) => updateLocation(index, "notes", value)}
+              />
+
+              <button
+                onClick={() => removeLocation(index)}
+                style={styles.smallDangerButton}
+              >
+                Remove Location
+              </button>
+            </div>
+          ))}
+
+          <button onClick={addLocation} style={styles.secondaryButton}>
+            + Add Location
           </button>
         </Section>
 
@@ -480,6 +583,46 @@ export default function App() {
           </div>
         ))}
 
+        <div className="location-section" style={styles.peopleSection}>
+          <h2 style={styles.previewSectionTitle}>Locations / Parking / Load-In</h2>
+
+          {locations.map((location, index) => (
+            <div key={location.id} style={styles.locationCard}>
+              <h3 style={styles.locationTitle}>
+                {location.name || `Location ${index + 1}`}
+              </h3>
+
+              <p>
+                <strong>Address:</strong>{" "}
+                {location.address ? (
+                  <a
+                    href={getMapLink(location.address)}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={styles.previewMapLink}
+                  >
+                    {location.address}
+                  </a>
+                ) : (
+                  "Address TBD"
+                )}
+              </p>
+
+              <p>
+                <strong>Parking:</strong> {location.parking || "Parking TBD"}
+              </p>
+
+              <p>
+                <strong>Load-In:</strong> {location.loadIn || "Load-in TBD"}
+              </p>
+
+              <p>
+                <strong>Notes:</strong> {location.notes || "—"}
+              </p>
+            </div>
+          ))}
+        </div>
+
         <div className="people-section" style={styles.peopleSection}>
           <h2 style={styles.previewSectionTitle}>Crew / Vendors</h2>
 
@@ -564,12 +707,13 @@ function Input({ label, value, onChange, placeholder = "", type = "text" }) {
   );
 }
 
-function Textarea({ label, value, onChange }) {
+function Textarea({ label, value, onChange, placeholder = "" }) {
   return (
     <label style={styles.label}>
       {label}
       <textarea
         value={value || ""}
+        placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         style={styles.textarea}
       />
@@ -720,6 +864,15 @@ const styles = {
     cursor: "pointer",
     fontSize: 16,
   },
+  mapLink: {
+    color: "#1d4ed8",
+    fontWeight: "bold",
+    fontSize: 13,
+  },
+  previewMapLink: {
+    color: "#1d4ed8",
+    fontWeight: "bold",
+  },
   preview: {
     background: "white",
     borderRadius: 20,
@@ -796,6 +949,18 @@ const styles = {
     paddingBottom: 8,
     marginBottom: 16,
     fontSize: 24,
+  },
+  locationCard: {
+    border: "1px solid #e2e8f0",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    background: "#f8fafc",
+    lineHeight: 1.5,
+  },
+  locationTitle: {
+    margin: "0 0 8px 0",
+    fontSize: 20,
   },
   table: {
     width: "100%",
