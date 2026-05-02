@@ -237,16 +237,17 @@ export default function App() {
           {shootDays.length > 1 && <button onClick={removeActiveDay} style={styles.dangerButton}>Remove Active Day</button>}
         </Section>
 
-        <Section title={`Active Day: ${activeDay.label}`}>
-          <Input label="Day Label" value={activeDay.label} onChange={(v) => updateDay("label", v)} />
-          <Input label="Shoot Date" type="date" value={activeDay.date} onChange={(v) => updateDay("date", v)} />
-          <Input label="Crew Call" value={activeDay.callTime} onChange={(v) => updateDay("callTime", v)} />
-          <Input label="Lunch" value={activeDay.lunch} onChange={(v) => updateDay("lunch", v)} />
-          <Input label="Wrap" value={activeDay.wrap} onChange={(v) => updateDay("wrap", v)} />
-          <Input label="Weather Temp" value={activeDay.weatherTemp} onChange={(v) => updateDay("weatherTemp", v)} />
-          <Input label="Weather Conditions" value={activeDay.weatherConditions} onChange={(v) => updateDay("weatherConditions", v)} />
-          <Input label="Sunrise / Sunset" value={activeDay.sunTimes} onChange={(v) => updateDay("sunTimes", v)} />
-        </Section>
+      <Section title={`Active Day: ${activeDay.label}`}>
+  <Input label="Day Label" value={activeDay.label} onChange={(v) => updateDay("label", v)} />
+  <Input label="Shoot Date" type="date" value={activeDay.date} onChange={(v) => updateDay("date", v)} />
+  <Input label="Crew Call" value={activeDay.callTime} onChange={(v) => updateDay("callTime", v)} />
+  <Input label="Lunch" value={activeDay.lunch} onChange={(v) => updateDay("lunch", v)} />
+  <Input label="Wrap" value={activeDay.wrap} onChange={(v) => updateDay("wrap", v)} />
+
+  <Input label="Weather Temp" value={activeDay.weatherTemp} onChange={(v) => updateDay("weatherTemp", v)} />
+  <Input label="Weather Conditions" value={activeDay.weatherConditions} onChange={(v) => updateDay("weatherConditions", v)} />
+  <Input label="Sunrise / Sunset" value={activeDay.sunTimes} onChange={(v) => updateDay("sunTimes", v)} />
+</Section>
 
         <Section title="Schedule">
           {activeDay.schedule.map((item, index) => (
