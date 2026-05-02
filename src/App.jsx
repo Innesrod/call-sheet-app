@@ -573,7 +573,11 @@ const clearLogo = () => {
             <p style={styles.clientText}>{clientName || "Client Name"}</p>
           </div>
 
-          <div style={styles.logoBox}>CIF</div>
+          {logo ? (
+  <img src={logo} alt="CIF Logo" style={styles.logoImage} />
+) : (
+  <div style={styles.logoBox}>CIF</div>
+)}
         </div>
 
         {shootDays.map((day) => (
