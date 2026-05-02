@@ -569,13 +569,17 @@ export default function App() {
         <div style={styles.previewHeader}>
           <div>
             <div style={styles.eyebrow}>Production Call Sheet</div>
-            <h1 style={styles.previewTitle}>
-              Project: {projectName || "Name"}
-            </h1>
-            <h2 style={styles.projectTitle}>CALL SHEET</h2>
-            <p style={styles.clientText}>
-              Client: {clientName || "Name"}
-            </p>
+            <h1 style={{ fontSize: 28, margin: "8px 0", color: "black", fontWeight: 900 }}>
+  Project: {projectName || "Name"}
+</h1>
+
+<h2 style={{ margin: 0, fontSize: 18, color: "black", fontWeight: 900 }}>
+  CALL SHEET
+</h2>
+
+<p style={{ color: "black", fontWeight: 900, fontSize: 18, marginTop: 10 }}>
+  Client: {clientName || "Name"}
+</p>
           </div>
 
           {logo ? (
