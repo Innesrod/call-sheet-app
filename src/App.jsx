@@ -326,10 +326,12 @@ export default function App() {
                 <h2 style={styles.dayTitle}>{formatDate(day.date)}</h2>
               </div>
               <div style={styles.dayMeta}>
-                <div><strong>Crew Call:</strong> {day.callTime || "TBD"}</div>
-                <div><strong>Lunch:</strong> {day.lunch || "TBD"}</div>
-                <div><strong>Wrap:</strong> {day.wrap || "TBD"}</div>
-              </div>
+  <div><strong>Crew Call:</strong> {day.callTime || "TBD"}</div>
+  <div><strong>Lunch:</strong> {day.lunch || "TBD"}</div>
+  <div><strong>Wrap:</strong> {day.wrap || "TBD"}</div>
+  <div><strong>Weather:</strong> {day.weatherTemp || "TBD"} / {day.weatherConditions || "TBD"}</div>
+  <div><strong>Sun:</strong> {day.sunTimes || "TBD"}</div>
+</div>
             </div>
             <Table
               headers={["Time", "Schedule", "Location", "Notes"]}
