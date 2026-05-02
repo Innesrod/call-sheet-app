@@ -938,7 +938,7 @@ const styles = {
     color: "#64748b",
   },
   previewTitle: {
-    fontSize: 48,
+    fontSize: 30,
     margin: "8px 0",
     letterSpacing: -2,
   },
