@@ -205,6 +205,21 @@ export default function App() {
     );
   };
 
+  const handleLogoUpload = (file) => {
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    setLogo(reader.result);
+  };
+
+  reader.readAsDataURL(file);
+};
+
+const clearLogo = () => {
+  setLogo("");
+};
   const handlePrint = () => {
     window.print();
   };
