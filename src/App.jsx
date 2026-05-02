@@ -260,13 +260,14 @@ const clearLogo = () => {
             label="Project Name"
             value={projectName}
             onChange={setProjectName}
-            placeholder="Example: Climb to End Cancer"
+            placeholder="Enter project name here"
+            
           />
           <Input
             label="Client Name"
             value={clientName}
             onChange={setClientName}
-            placeholder="Example: American Cancer Society"
+            placeholder="Example: Enter client name"
           />
         </Section>
 
@@ -567,7 +568,7 @@ const clearLogo = () => {
           <div>
             <div style={styles.eyebrow}>Production Call Sheet</div>
             <h1 style={styles.previewTitle}>
-  {projectName || "PROJECT NAME"}
+  Project: {projectName || "Name"}
 </h1>
             <h2 style={styles.projectTitle}>CALL SHEET</h2>
             <p style={styles.clientText}>{clientName || "Client Name"}</p>
