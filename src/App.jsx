@@ -1039,8 +1039,8 @@ const styles = {
 },
 
 logoImage: {
-  maxWidth: 160,
-  maxHeight: 90,
+  maxWidth: 200,
+  maxHeight: 100,
   objectFit: "contain",
   flexShrink: 0,
 },
