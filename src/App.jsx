@@ -10,6 +10,9 @@ function createDay(number) {
     callTime: "8:30 AM",
     lunch: "",
     wrap: "",
+    weatherTemp: "",
+weatherConditions: "",
+sunTimes: "",
     schedule: [
       { time: "8:30 AM", activity: "Crew Call / Load In", location: "", notes: "" },
       { time: "11:00 AM", activity: "Room Ready", location: "", notes: "" },
