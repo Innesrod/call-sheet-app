@@ -48,8 +48,10 @@ const getMapLink = (address) => {
 export default function App() {
   const [projectName, setProjectName] = useState("");
   const [clientName, setClientName] = useState("");
+  const [logo, setLogo] = useState("");
   const [shootDays, setShootDays] = useState([createDay(1)]);
   const [activeDayIndex, setActiveDayIndex] = useState(0);
+  
 
   const [crew, setCrew] = useState([
     {
