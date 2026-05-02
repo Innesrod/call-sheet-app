@@ -948,7 +948,11 @@ const styles = {
     margin: 0,
     fontSize: 22,
   },
-  clientText: {
+ clientText: {
+  color: "#020617",
+  fontWeight: "700",
+  fontSize: 16,
+}, {
     color: "#64748b",
     fontWeight: "bold",
   },
