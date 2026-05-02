@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const STORAGE_KEY = "cif-call-sheet-project";
+const STORAGE_KEY = "cif-call-sheet-project-weather";
 
 function createDay(number) {
   return {
@@ -11,8 +11,8 @@ function createDay(number) {
     lunch: "",
     wrap: "",
     weatherTemp: "",
-weatherConditions: "",
-sunTimes: "",
+    weatherConditions: "",
+    sunTimes: "",
     schedule: [
       { time: "8:30 AM", activity: "Crew Call / Load In", location: "", notes: "" },
       { time: "11:00 AM", activity: "Room Ready", location: "", notes: "" },
@@ -203,7 +203,7 @@ export default function App() {
 
       <div className="no-print" style={styles.editor}>
         <h1>CIF Call Sheet Builder</h1>
-        <p style={styles.muted}>Phase 5: Save / Load / Reset</p>
+        <p style={styles.muted}>Phase 6: Manual Weather Fields</p>
 
         <Section title="Project Info">
           <Input label="Project Name" value={projectName} onChange={setProjectName} />
@@ -237,17 +237,20 @@ export default function App() {
           {shootDays.length > 1 && <button onClick={removeActiveDay} style={styles.dangerButton}>Remove Active Day</button>}
         </Section>
 
-      <Section title={`Active Day: ${activeDay.label}`}>
-  <Input label="Day Label" value={activeDay.label} onChange={(v) => updateDay("label", v)} />
-  <Input label="Shoot Date" type="date" value={activeDay.date} onChange={(v) => updateDay("date", v)} />
-  <Input label="Crew Call" value={activeDay.callTime} onChange={(v) => updateDay("callTime", v)} />
-  <Input label="Lunch" value={activeDay.lunch} onChange={(v) => updateDay("lunch", v)} />
-  <Input label="Wrap" value={activeDay.wrap} onChange={(v) => updateDay("wrap", v)} />
+        <Section title={`Active Day: ${activeDay.label}`}>
+          <Input label="Day Label" value={activeDay.label} onChange={(v) => updateDay("label", v)} />
+          <Input label="Shoot Date" type="date" value={activeDay.date} onChange={(v) => updateDay("date", v)} />
+          <Input label="Crew Call" value={activeDay.callTime} onChange={(v) => updateDay("callTime", v)} />
+          <Input label="Lunch" value={activeDay.lunch} onChange={(v) => updateDay("lunch", v)} />
+          <Input label="Wrap" value={activeDay.wrap} onChange={(v) => updateDay("wrap", v)} />
 
-  <Input label="Weather Temp" value={activeDay.weatherTemp} onChange={(v) => updateDay("weatherTemp", v)} />
-  <Input label="Weather Conditions" value={activeDay.weatherConditions} onChange={(v) => updateDay("weatherConditions", v)} />
-  <Input label="Sunrise / Sunset" value={activeDay.sunTimes} onChange={(v) => updateDay("sunTimes", v)} />
-</Section>
+          <div style={styles.weatherBox}>
+            <h3 style={styles.weatherTitle}>Weather</h3>
+            <Input label="Weather Temp" value={activeDay.weatherTemp} onChange={(v) => updateDay("weatherTemp", v)} placeholder="Example: 72° / 48°" />
+            <Input label="Weather Conditions" value={activeDay.weatherConditions} onChange={(v) => updateDay("weatherConditions", v)} placeholder="Example: Sunny, light wind" />
+            <Input label="Sunrise / Sunset" value={activeDay.sunTimes} onChange={(v) => updateDay("sunTimes", v)} placeholder="Example: Sunrise 6:18 AM / Sunset 7:44 PM" />
+          </div>
+        </Section>
 
         <Section title="Schedule">
           {activeDay.schedule.map((item, index) => (
@@ -327,13 +330,18 @@ export default function App() {
                 <h2 style={styles.dayTitle}>{formatDate(day.date)}</h2>
               </div>
               <div style={styles.dayMeta}>
-  <div><strong>Crew Call:</strong> {day.callTime || "TBD"}</div>
-  <div><strong>Lunch:</strong> {day.lunch || "TBD"}</div>
-  <div><strong>Wrap:</strong> {day.wrap || "TBD"}</div>
-  <div><strong>Weather:</strong> {day.weatherTemp || "TBD"} / {day.weatherConditions || "TBD"}</div>
-  <div><strong>Sun:</strong> {day.sunTimes || "TBD"}</div>
-</div>
+                <div><strong>Crew Call:</strong> {day.callTime || "TBD"}</div>
+                <div><strong>Lunch:</strong> {day.lunch || "TBD"}</div>
+                <div><strong>Wrap:</strong> {day.wrap || "TBD"}</div>
+              </div>
             </div>
+
+            <div style={styles.previewWeatherBox}>
+              <strong>Weather:</strong> {day.weatherTemp || "TBD"} — {day.weatherConditions || "TBD"}
+              <br />
+              <strong>Sun:</strong> {day.sunTimes || "TBD"}
+            </div>
+
             <Table
               headers={["Time", "Schedule", "Location", "Notes"]}
               rows={day.schedule.map((item) => [item.time, item.activity, item.location, item.notes])}
@@ -424,6 +432,9 @@ const styles = {
   input: { padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5e1", fontSize: 14 },
   textarea: { padding: "10px 12px", borderRadius: 10, border: "1px solid #cbd5e1", fontSize: 14, minHeight: 70 },
   card: { border: "1px solid #e2e8f0", background: "#f8fafc", borderRadius: 14, padding: 12, display: "flex", flexDirection: "column", gap: 10 },
+  weatherBox: { border: "1px solid #cbd5e1", background: "#f8fafc", borderRadius: 14, padding: 12, display: "flex", flexDirection: "column", gap: 10 },
+  weatherTitle: { margin: 0, fontSize: 16 },
+  previewWeatherBox: { border: "1px solid #cbd5e1", background: "#f8fafc", borderRadius: 12, padding: 12, marginBottom: 16, lineHeight: 1.5 },
   dayTabs: { display: "flex", flexWrap: "wrap", gap: 8 },
   tabButton: { padding: "8px 12px", borderRadius: 999, border: "1px solid #cbd5e1", background: "white", cursor: "pointer", fontWeight: "bold" },
   activeTab: { background: "#0f172a", color: "white" },
