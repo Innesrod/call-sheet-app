@@ -566,10 +566,10 @@ const clearLogo = () => {
         <div style={styles.previewHeader}>
           <div>
             <div style={styles.eyebrow}>Production Call Sheet</div>
-            <h1 style={styles.previewTitle}>CALL SHEET</h1>
-            <h2 style={styles.projectTitle}>
-              {projectName || "Project Name"}
-            </h2>
+            <h1 style={styles.previewTitle}>
+  {projectName || "PROJECT NAME"}
+</h1>
+            <h2 style={styles.projectTitle}>CALL SHEET</h2>
             <p style={styles.clientText}>{clientName || "Client Name"}</p>
           </div>
 
