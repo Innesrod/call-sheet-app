@@ -222,64 +222,64 @@ export default function App() {
   };
 
   const autoFillWeather = async () => {
-    const weatherLocation = activeDay.weatherLocation?.trim();
+  const weatherLocation = activeDay.weatherLocation?.trim();
 
-    if (!weatherLocation) {
-      alert("Please enter a Weather Location using city/state only, such as Daytona Beach, FL.");
+  if (!weatherLocation) {
+    alert("Enter weather location (city or full address).");
+    return;
+  }
+
+  if (!activeDay.date) {
+    alert("Please add a shoot date first.");
+    return;
+  }
+
+  const API_KEY = 8809bc59713d4cd6a5b162755260305 ;
+
+  try {
+    const response = await fetch(
+      `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${encodeURIComponent(
+        weatherLocation
+      )}&days=7`
+    );
+
+    const data = await response.json();
+
+    if (!data || data.error) {
+      alert("Weather not found. Try city or full address.");
       return;
     }
 
-    if (!activeDay.date) {
-      alert("Please add a shoot date first.");
+    const forecastDay = data.forecast.forecastday.find(
+      (d) => d.date === activeDay.date
+    );
+
+    if (!forecastDay) {
+      alert("Forecast not available for that date yet.");
       return;
     }
 
-    try {
-      const geoResponse = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
-          weatherLocation
-        )}&count=1&language=en&format=json`
-      );
+    updateDay(
+      "weatherTemp",
+      `${Math.round(forecastDay.day.maxtemp_f)}° / ${Math.round(
+        forecastDay.day.mintemp_f
+      )}°`
+    );
 
-      const geoData = await geoResponse.json();
-      const place = geoData?.results?.[0];
+    updateDay(
+      "weatherConditions",
+      forecastDay.day.condition.text
+    );
 
-      if (!place) {
-        alert("Could not find weather. Use city/state only, such as Daytona Beach, FL.");
-        return;
-      }
+    updateDay(
+      "sunTimes",
+      `Sunrise ${forecastDay.astro.sunrise} / Sunset ${forecastDay.astro.sunset}`
+    );
 
-      const forecastResponse = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&timezone=auto&start_date=${activeDay.date}&end_date=${activeDay.date}`
-      );
-
-      const forecastData = await forecastResponse.json();
-      const dayIndex = forecastData?.daily?.time?.indexOf(activeDay.date);
-
-      if (dayIndex < 0) {
-        alert("Forecast is not available for that date yet. You can enter weather manually.");
-        return;
-      }
-
-      updateDay(
-        "weatherTemp",
-        `${Math.round(forecastData.daily.temperature_2m_max[dayIndex])}° / ${Math.round(
-          forecastData.daily.temperature_2m_min[dayIndex]
-        )}°`
-      );
-
-      updateDay("weatherConditions", weatherCodeToText(forecastData.daily.weather_code[dayIndex]));
-
-      updateDay(
-        "sunTimes",
-        `Sunrise ${formatWeatherTime(forecastData.daily.sunrise[dayIndex])} / Sunset ${formatWeatherTime(
-          forecastData.daily.sunset[dayIndex]
-        )}`
-      );
-    } catch {
-      alert("Weather lookup failed. You can still enter it manually.");
-    }
-  };
+  } catch {
+    alert("Weather lookup failed.");
+  }
+};
 
   const handlePrint = () => window.print();
 
