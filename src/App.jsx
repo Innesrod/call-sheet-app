@@ -10,7 +10,7 @@ function createDay(number) {
     callTime: "8:30 AM",
     lunch: "",
     wrap: "",
-    weatherTemp: "",
+    weatherTemp: "",style={styles.previewHeader}
     weatherConditions: "",
     sunTimes: "",
     schedule: [
@@ -452,14 +452,25 @@ export default function App() {
 
       <div className="preview" style={styles.preview}>
         <div style={styles.previewHeader}>
-          <div>
-            <div style={styles.eyebrow}>Production Call Sheet</div>
-            <h1 style={styles.previewTitle}>Project: {projectName || "Name"}</h1>
-            <h2 style={styles.projectTitle}>CALL SHEET</h2>
-            <p style={styles.clientText}>Client: {clientName || "Name"}</p>
-          </div>
-          {logo ? <img src={logo} alt="Logo" style={styles.logoImage} /> : <div style={styles.logoBox}>CIF</div>}
-        </div>
+  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={styles.eyebrow}>Production Call Sheet</div>
+
+    <h1 style={styles.previewTitle}>
+      {projectName || "Project Name"}
+    </h1>
+
+    <div style={styles.headerMetaRow}>
+      <span><strong>Client:</strong> {clientName || "Client Name"}</span>
+      <span><strong>Total Shoot Days:</strong> {shootDays.length}</span>
+    </div>
+  </div>
+
+  {logo ? (
+    <img src={logo} alt="Logo" style={styles.logoImage} />
+  ) : (
+    <div style={styles.logoBox}>CIF</div>
+  )}
+</div>
 
         {shootDays.map((day) => (
           <div key={day.id} className="day-section" style={styles.daySection}>
