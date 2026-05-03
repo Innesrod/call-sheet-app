@@ -343,6 +343,10 @@ export default function App() {
 
           <div style={styles.weatherBox}>
             <h3 style={styles.weatherTitle}>Weather</h3>
+
+            <button onClick={autoFillWeather} style={styles.secondaryButton}>
+            Auto Fill Weather
+            </button>
             <Input label="Weather Temp" value={activeDay.weatherTemp} onChange={(v) => updateDay("weatherTemp", v)} placeholder="Example: 72° / 48°" />
             <Input label="Weather Conditions" value={activeDay.weatherConditions} onChange={(v) => updateDay("weatherConditions", v)} placeholder="Example: Sunny, light wind" />
             <Input label="Sunrise / Sunset" value={activeDay.sunTimes} onChange={(v) => updateDay("sunTimes", v)} placeholder="Example: Sunrise 6:18 AM / Sunset 7:44 PM" />
