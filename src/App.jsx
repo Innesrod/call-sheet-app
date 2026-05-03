@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const STORAGE_KEY = "cif-call-sheet-project-weather-docs-polished";
+const STORAGE_KEY = "cif-call-sheet-project-final-weather-location";
 
 function createDay(number) {
   return {
@@ -10,6 +10,7 @@ function createDay(number) {
     callTime: "8:30 AM",
     lunch: "",
     wrap: "",
+    weatherLocation: "",
     weatherTemp: "",
     weatherConditions: "",
     sunTimes: "",
@@ -221,43 +222,32 @@ export default function App() {
   };
 
   const autoFillWeather = async () => {
-    const location = locations.find((item) => item.address);
+    const weatherLocation = activeDay.weatherLocation?.trim();
 
-    if (!location) return alert("Please add a location first.");
-    if (!activeDay.date) return alert("Please add a shoot date first.");
+    if (!weatherLocation) {
+      alert("Please enter a Weather Location using city/state only, such as Daytona Beach, FL.");
+      return;
+    }
 
-    const address = location.address || "";
-    const name = location.name || "";
-    const addressParts = address.split(",").map((part) => part.trim()).filter(Boolean);
-
-  const cityState =
-  addressParts.length >= 3
-    ? `${addressParts[addressParts.length - 2]}, ${addressParts[addressParts.length - 1]}`
-    : address;
-
-const weatherQueries = [
-  cityState,
-  addressParts.slice(-2).join(", "),
-  address,
-  name,
-].filter(Boolean);
+    if (!activeDay.date) {
+      alert("Please add a shoot date first.");
+      return;
+    }
 
     try {
-      let place = null;
+      const geoResponse = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+          weatherLocation
+        )}&count=1&language=en&format=json`
+      );
 
-      for (const query of weatherQueries) {
-        const geoResponse = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`
-        );
-        const geoData = await geoResponse.json();
+      const geoData = await geoResponse.json();
+      const place = geoData?.results?.[0];
 
-        if (geoData?.results?.[0]) {
-          place = geoData.results[0];
-          break;
-        }
+      if (!place) {
+        alert("Could not find weather. Use city/state only, such as Daytona Beach, FL.");
+        return;
       }
-
-      if (!place) return alert("Could not find weather. Try using City, State only.");
 
       const forecastResponse = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&timezone=auto&start_date=${activeDay.date}&end_date=${activeDay.date}`
@@ -266,18 +256,25 @@ const weatherQueries = [
       const forecastData = await forecastResponse.json();
       const dayIndex = forecastData?.daily?.time?.indexOf(activeDay.date);
 
-      if (dayIndex < 0) return alert("Forecast is not available for that date yet.");
+      if (dayIndex < 0) {
+        alert("Forecast is not available for that date yet. You can enter weather manually.");
+        return;
+      }
 
       updateDay(
         "weatherTemp",
-        `${Math.round(forecastData.daily.temperature_2m_max[dayIndex])}° / ${Math.round(forecastData.daily.temperature_2m_min[dayIndex])}°`
+        `${Math.round(forecastData.daily.temperature_2m_max[dayIndex])}° / ${Math.round(
+          forecastData.daily.temperature_2m_min[dayIndex]
+        )}°`
       );
 
       updateDay("weatherConditions", weatherCodeToText(forecastData.daily.weather_code[dayIndex]));
 
       updateDay(
         "sunTimes",
-        `Sunrise ${formatWeatherTime(forecastData.daily.sunrise[dayIndex])} / Sunset ${formatWeatherTime(forecastData.daily.sunset[dayIndex])}`
+        `Sunrise ${formatWeatherTime(forecastData.daily.sunrise[dayIndex])} / Sunset ${formatWeatherTime(
+          forecastData.daily.sunset[dayIndex]
+        )}`
       );
     } catch {
       alert("Weather lookup failed. You can still enter it manually.");
@@ -300,7 +297,7 @@ const weatherQueries = [
 
       <div className="no-print" style={styles.editor}>
         <h1>CIF Call Sheet Builder</h1>
-        <p style={styles.muted}>Polished PDF Layout</p>
+        <p style={styles.muted}>Weather uses city/state only. Full shoot addresses stay in Locations.</p>
 
         <Section title="Project Info">
           <Input label="Project Name" value={projectName} onChange={setProjectName} />
@@ -343,6 +340,15 @@ const weatherQueries = [
 
           <div style={styles.weatherBox}>
             <h3 style={styles.weatherTitle}>Weather</h3>
+            <p style={styles.helpText}>
+              Enter city/state only for weather lookup. Example: Daytona Beach, FL. Use the full shoot address in Locations.
+            </p>
+            <Input
+              label="Weather Location"
+              value={activeDay.weatherLocation}
+              onChange={(v) => updateDay("weatherLocation", v)}
+              placeholder="Example: Daytona Beach, FL"
+            />
             <button onClick={autoFillWeather} style={styles.secondaryButton}>Auto Fill Weather</button>
             <Input label="Weather Temp" value={activeDay.weatherTemp} onChange={(v) => updateDay("weatherTemp", v)} placeholder="Example: 72° / 48°" />
             <Input label="Weather Conditions" value={activeDay.weatherConditions} onChange={(v) => updateDay("weatherConditions", v)} placeholder="Example: Sunny, light wind" />
@@ -367,7 +373,7 @@ const weatherQueries = [
           {locations.map((location, index) => (
             <div key={location.id} style={styles.card}>
               <Input label="Location Name" value={location.name} onChange={(v) => updateLocation(index, "name", v)} />
-              <Textarea label="Address" value={location.address} onChange={(v) => updateLocation(index, "address", v)} />
+              <Textarea label="Full Shoot Address" value={location.address} onChange={(v) => updateLocation(index, "address", v)} />
               {location.address && <a href={getMapLink(location.address)} target="_blank" rel="noreferrer">Open in Google Maps</a>}
               <Textarea label="Parking" value={location.parking} onChange={(v) => updateLocation(index, "parking", v)} />
               <Textarea label="Load-In" value={location.loadIn} onChange={(v) => updateLocation(index, "loadIn", v)} />
@@ -449,6 +455,8 @@ const weatherQueries = [
             </div>
 
             <div style={styles.previewWeatherBox}>
+              <strong>Weather Location:</strong> {day.weatherLocation || "TBD"}
+              <br />
               <strong>Weather:</strong> {day.weatherTemp || "TBD"} — {day.weatherConditions || "TBD"}
               <br />
               <strong>Sun:</strong> {day.sunTimes || "TBD"}
@@ -549,6 +557,7 @@ const styles = {
   page: { minHeight: "100vh", background: "#f1f5f9", padding: 24, fontFamily: "Arial, sans-serif", color: "#0f172a", display: "grid", gridTemplateColumns: "420px 1fr", gap: 24 },
   editor: { display: "flex", flexDirection: "column", gap: 16 },
   muted: { color: "#64748b", marginTop: -10 },
+  helpText: { color: "#475569", fontSize: 13, lineHeight: 1.4, margin: 0 },
   section: { background: "white", borderRadius: 16, padding: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" },
   sectionBody: { display: "flex", flexDirection: "column", gap: 12 },
   label: { display: "flex", flexDirection: "column", gap: 6, fontSize: 12, fontWeight: "bold", textTransform: "uppercase", color: "#64748b" },
