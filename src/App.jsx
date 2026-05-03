@@ -221,7 +221,70 @@ export default function App() {
     reader.onload = () => setLogo(reader.result);
     reader.readAsDataURL(file);
   };
+  const autoFillWeather = async () => {
+  const locationQuery = locations.find((location) => location.address)?.address;
 
+  if (!locationQuery) {
+    alert("Please add a location address first.");
+    return;
+  }
+
+  if (!activeDay.date) {
+    alert("Please add a shoot date first.");
+    return;
+  }
+
+  try {
+    const geoResponse = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+        locationQuery
+      )}&count=1&language=en&format=json`
+    );
+
+    const geoData = await geoResponse.json();
+    const place = geoData?.results?.[0];
+
+    if (!place) {
+      alert("Could not find weather for that location. Try City, State.");
+      return;
+    }
+
+    const forecastResponse = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&timezone=auto&start_date=${activeDay.date}&end_date=${activeDay.date}`
+    );
+
+    const forecastData = await forecastResponse.json();
+    const dayIndex = forecastData?.daily?.time?.indexOf(activeDay.date);
+
+    if (dayIndex < 0) {
+      alert("Forecast is not available for that date yet.");
+      return;
+    }
+
+    updateDay(
+      "weatherTemp",
+      `${Math.round(forecastData.daily.temperature_2m_max[dayIndex])}° / ${Math.round(
+        forecastData.daily.temperature_2m_min[dayIndex]
+      )}°`
+    );
+
+    updateDay(
+      "weatherConditions",
+      weatherCodeToText(forecastData.daily.weather_code[dayIndex])
+    );
+
+    updateDay(
+      "sunTimes",
+      `Sunrise ${formatWeatherTime(
+        forecastData.daily.sunrise[dayIndex]
+      )} / Sunset ${formatWeatherTime(forecastData.daily.sunset[dayIndex])}`
+    );
+
+    alert("Weather added.");
+  } catch (error) {
+    alert("Weather lookup failed. You can still enter it manually.");
+  }
+};
   const handlePrint = () => window.print();
 
   return (
