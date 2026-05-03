@@ -297,7 +297,7 @@ const autoFillWeather = async () => {
       `Sunrise ${formatWeatherTime(forecastData.daily.sunrise[dayIndex])} / Sunset ${formatWeatherTime(forecastData.daily.sunset[dayIndex])}`
     );
 
-    alert("Weather added.");
+    
   } catch (error) {
     alert("Weather lookup failed. You can still enter it manually.");
   }
