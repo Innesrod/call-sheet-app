@@ -3,6 +3,7 @@ import html2pdf from "html2pdf.js";
 
 const PROJECTS_KEY = "cif-call-sheet-projects-v1";
 const LAST_PROJECT_KEY = "cif-call-sheet-last-project-v1";
+const CREW_LIBRARY_KEY = "cif-call-sheet-crew-library-v1";
 
 function createDay(number) {
   return {
@@ -73,6 +74,19 @@ function saveProjects(projects) {
   localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
 }
 
+function loadCrewLibrary() {
+  try {
+    const saved = localStorage.getItem(CREW_LIBRARY_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCrewLibrary(library) {
+  localStorage.setItem(CREW_LIBRARY_KEY, JSON.stringify(library));
+}
+
 function formatDate(value) {
   if (!value) return "Shoot Date TBD";
   const date = new Date(`${value}T00:00:00`);
@@ -109,6 +123,9 @@ export default function App() {
   const [savedProjects, setSavedProjects] = useState(initialProjects);
   const [selectedProjectName, setSelectedProjectName] = useState(lastProjectName || "");
   const [saveAsName, setSaveAsName] = useState(lastProjectName || "");
+
+  const [crewLibrary, setCrewLibrary] = useState(loadCrewLibrary());
+  const [selectedCrewLibraryId, setSelectedCrewLibraryId] = useState("");
 
   const [projectName, setProjectName] = useState(initialProject.projectName || "");
   const [clientName, setClientName] = useState(initialProject.clientName || "");
@@ -209,6 +226,91 @@ export default function App() {
   const handleReset = () => {
     if (!confirm("Clear the current editor? Saved projects will remain.")) return;
     loadProjectIntoEditor(createBlankProject(), "");
+  };
+
+  const saveCrewMemberToLibrary = (member) => {
+    if (!member.name.trim()) {
+      alert("Enter a crew name before saving to library.");
+      return;
+    }
+
+    const existingIndex = crewLibrary.findIndex(
+      (saved) =>
+        saved.name.trim().toLowerCase() === member.name.trim().toLowerCase() &&
+        saved.phone.trim() === member.phone.trim()
+    );
+
+    let updatedLibrary;
+
+    if (existingIndex >= 0) {
+      updatedLibrary = crewLibrary.map((saved, index) =>
+        index === existingIndex
+          ? { ...member, id: saved.id }
+          : saved
+      );
+      alert(`${member.name} updated in crew library.`);
+    } else {
+      updatedLibrary = [
+        ...crewLibrary,
+        {
+          ...member,
+          id: Date.now() + Math.random(),
+        },
+      ];
+      alert(`${member.name} saved to crew library.`);
+    }
+
+    saveCrewLibrary(updatedLibrary);
+    setCrewLibrary(updatedLibrary);
+  };
+
+  const addCrewFromLibrary = () => {
+    if (!selectedCrewLibraryId) {
+      alert("Select a saved crew member first.");
+      return;
+    }
+
+    const member = crewLibrary.find((m) => String(m.id) === String(selectedCrewLibraryId));
+
+    if (!member) {
+      alert("Crew member not found.");
+      return;
+    }
+
+    setCrew((items) => [
+      ...items,
+      {
+        ...member,
+        id: Date.now() + Math.random(),
+      },
+    ]);
+
+    setSelectedCrewLibraryId("");
+  };
+
+  const deleteCrewFromLibrary = () => {
+    if (!selectedCrewLibraryId) {
+      alert("Select a saved crew member to delete.");
+      return;
+    }
+
+    const member = crewLibrary.find((m) => String(m.id) === String(selectedCrewLibraryId));
+
+    if (!member) {
+      alert("Crew member not found.");
+      return;
+    }
+
+    if (!confirm(`Delete "${member.name}" from the crew library?`)) return;
+
+    const updatedLibrary = crewLibrary.filter(
+      (m) => String(m.id) !== String(selectedCrewLibraryId)
+    );
+
+    saveCrewLibrary(updatedLibrary);
+    setCrewLibrary(updatedLibrary);
+    setSelectedCrewLibraryId("");
+    alert("Crew member deleted from library.");
   };
 
   const updateDay = (field, value) => {
@@ -361,7 +463,7 @@ export default function App() {
 
     const options = {
       margin: 0.25,
-      filename: `${projectName || "call-sheet"}.pdf`,
+      filename: `${projectName || "call-sheet"}-${new Date().toISOString().slice(0, 10)}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
@@ -410,7 +512,7 @@ export default function App() {
 
       <div className="no-print" style={styles.editor}>
         <h1>CIF Call Sheet Builder</h1>
-        <p style={styles.muted}>Project Manager Added</p>
+        <p style={styles.muted}>Project Manager + Crew Library</p>
 
         <Section title="Project Manager">
           <Input
@@ -572,6 +674,32 @@ export default function App() {
         </Section>
 
         <Section title="Crew / Vendors">
+          <div style={styles.card}>
+            <label style={styles.label}>
+              Add From Saved Crew Library
+              <select
+                value={selectedCrewLibraryId}
+                onChange={(e) => setSelectedCrewLibraryId(e.target.value)}
+                style={styles.input}
+              >
+                <option value="">Select crew member...</option>
+                {crewLibrary.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name || "Unnamed"} — {member.role || "No Role"}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <button onClick={addCrewFromLibrary} style={styles.secondaryButton}>
+              Add Saved Crew Member
+            </button>
+
+            <button onClick={deleteCrewFromLibrary} style={styles.dangerButton}>
+              Delete Selected Saved Crew
+            </button>
+          </div>
+
           {crew.map((member, index) => (
             <div key={member.id} style={styles.card}>
               <Input label="Name" value={member.name} onChange={(v) => updateCrew(index, "name", v)} />
@@ -579,6 +707,14 @@ export default function App() {
               <Input label="Call Time" value={member.callTime} onChange={(v) => updateCrew(index, "callTime", v)} />
               <Input label="Phone" value={member.phone} onChange={(v) => updateCrew(index, "phone", v)} />
               <Textarea label="Responsibilities" value={member.responsibility} onChange={(v) => updateCrew(index, "responsibility", v)} />
+
+              <button
+                onClick={() => saveCrewMemberToLibrary(member)}
+                style={styles.secondaryButton}
+              >
+                Save This Crew Member to Library
+              </button>
+
               <button
                 onClick={() => setCrew((items) => (items.length > 1 ? items.filter((_, i) => i !== index) : items))}
                 style={styles.smallDangerButton}
