@@ -221,7 +221,7 @@ export default function App() {
     reader.onload = () => setLogo(reader.result);
     reader.readAsDataURL(file);
   };
-  const autoFillWeather = async () => {
+const autoFillWeather = async () => {
   const location = locations.find((item) => item.address || item.name);
 
   if (!location) {
@@ -284,9 +284,7 @@ export default function App() {
 
     updateDay(
       "weatherTemp",
-      `${Math.round(forecastData.daily.temperature_2m_max[dayIndex])}° / ${Math.round(
-        forecastData.daily.temperature_2m_min[dayIndex]
-      )}°`
+      `${Math.round(forecastData.daily.temperature_2m_max[dayIndex])}° / ${Math.round(forecastData.daily.temperature_2m_min[dayIndex])}°`
     );
 
     updateDay(
@@ -296,59 +294,7 @@ export default function App() {
 
     updateDay(
       "sunTimes",
-      `Sunrise ${formatWeatherTime(
-        forecastData.daily.sunrise[dayIndex]
-      )} / Sunset ${formatWeatherTime(forecastData.daily.sunset[dayIndex])}`
-    );
-
-    alert("Weather added.");
-  } catch (error) {
-    alert("Weather lookup failed. You can still enter it manually.");
-  }
-};
-
-  const geoData = await geoResponse.json();
-
-  if (geoData?.results?.[0]) {
-    place = geoData.results[0];
-    break;
-  }
-}
-
-if (!place) {
-  alert("Could not find weather for that location. Try using City, State only, such as Flagstaff, AZ.");
-  return;
-}
-
-    const forecastResponse = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&timezone=auto&start_date=${activeDay.date}&end_date=${activeDay.date}`
-    );
-
-    const forecastData = await forecastResponse.json();
-    const dayIndex = forecastData?.daily?.time?.indexOf(activeDay.date);
-
-    if (dayIndex < 0) {
-      alert("Forecast is not available for that date yet.");
-      return;
-    }
-
-    updateDay(
-      "weatherTemp",
-      `${Math.round(forecastData.daily.temperature_2m_max[dayIndex])}° / ${Math.round(
-        forecastData.daily.temperature_2m_min[dayIndex]
-      )}°`
-    );
-
-    updateDay(
-      "weatherConditions",
-      weatherCodeToText(forecastData.daily.weather_code[dayIndex])
-    );
-
-    updateDay(
-      "sunTimes",
-      `Sunrise ${formatWeatherTime(
-        forecastData.daily.sunrise[dayIndex]
-      )} / Sunset ${formatWeatherTime(forecastData.daily.sunset[dayIndex])}`
+      `Sunrise ${formatWeatherTime(forecastData.daily.sunrise[dayIndex])} / Sunset ${formatWeatherTime(forecastData.daily.sunset[dayIndex])}`
     );
 
     alert("Weather added.");
