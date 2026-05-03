@@ -221,7 +221,7 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  const autoFillWeather = async () => {
+ const autoFillWeather = async () => {
   const weatherLocation = activeDay.weatherLocation?.trim();
 
   if (!weatherLocation) {
@@ -234,7 +234,7 @@ export default function App() {
     return;
   }
 
-const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
+  const API_KEY = "8809bc59713d4cd6a5b162755260305";
 
   try {
     const response = await fetch(
