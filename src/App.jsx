@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const STORAGE_KEY = "cif-call-sheet-project-weather-docs";
+const STORAGE_KEY = "cif-call-sheet-project-weather-docs-polished";
 
 function createDay(number) {
   return {
@@ -10,7 +10,7 @@ function createDay(number) {
     callTime: "8:30 AM",
     lunch: "",
     wrap: "",
-    weatherTemp: "",style={styles.previewHeader}
+    weatherTemp: "",
     weatherConditions: "",
     sunTimes: "",
     schedule: [
@@ -76,7 +76,6 @@ const weatherCodeToText = (code) => {
     82: "Heavy rain showers",
     95: "Thunderstorms",
   };
-
   return codes[code] || "Forecast available";
 };
 
@@ -109,7 +108,6 @@ export default function App() {
   const [projectName, setProjectName] = useState(saved?.projectName || "");
   const [clientName, setClientName] = useState(saved?.clientName || "");
   const [logo, setLogo] = useState(saved?.logo || "");
-
   const [shootDays, setShootDays] = useState(saved?.shootDays || [createDay(1)]);
   const [activeDayIndex, setActiveDayIndex] = useState(0);
 
@@ -126,19 +124,9 @@ export default function App() {
   );
 
   const [attachments, setAttachments] = useState(saved?.attachments || [createAttachment()]);
-
   const activeDay = shootDays[activeDayIndex];
 
-  const currentProject = {
-    projectName,
-    clientName,
-    logo,
-    shootDays,
-    crew,
-    clients,
-    locations,
-    attachments,
-  };
+  const currentProject = { projectName, clientName, logo, shootDays, crew, clients, locations, attachments };
 
   const handleSave = () => {
     saveProject(currentProject);
@@ -153,9 +141,7 @@ export default function App() {
 
   const updateDay = (field, value) => {
     setShootDays((days) =>
-      days.map((day, index) =>
-        index === activeDayIndex ? { ...day, [field]: value } : day
-      )
+      days.map((day, index) => (index === activeDayIndex ? { ...day, [field]: value } : day))
     );
   };
 
@@ -237,23 +223,12 @@ export default function App() {
   const autoFillWeather = async () => {
     const location = locations.find((item) => item.address || item.name);
 
-    if (!location) {
-      alert("Please add a location first.");
-      return;
-    }
-
-    if (!activeDay.date) {
-      alert("Please add a shoot date first.");
-      return;
-    }
+    if (!location) return alert("Please add a location first.");
+    if (!activeDay.date) return alert("Please add a shoot date first.");
 
     const address = location.address || "";
     const name = location.name || "";
-
-    const addressParts = address
-      .split(",")
-      .map((part) => part.trim())
-      .filter(Boolean);
+    const addressParts = address.split(",").map((part) => part.trim()).filter(Boolean);
 
     const weatherQueries = [
       address,
@@ -269,7 +244,6 @@ export default function App() {
         const geoResponse = await fetch(
           `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`
         );
-
         const geoData = await geoResponse.json();
 
         if (geoData?.results?.[0]) {
@@ -278,10 +252,7 @@ export default function App() {
         }
       }
 
-      if (!place) {
-        alert("Could not find weather. Try using City, State only.");
-        return;
-      }
+      if (!place) return alert("Could not find weather. Try using City, State only.");
 
       const forecastResponse = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&timezone=auto&start_date=${activeDay.date}&end_date=${activeDay.date}`
@@ -290,26 +261,20 @@ export default function App() {
       const forecastData = await forecastResponse.json();
       const dayIndex = forecastData?.daily?.time?.indexOf(activeDay.date);
 
-      if (dayIndex < 0) {
-        alert("Forecast is not available for that date yet.");
-        return;
-      }
+      if (dayIndex < 0) return alert("Forecast is not available for that date yet.");
 
       updateDay(
         "weatherTemp",
         `${Math.round(forecastData.daily.temperature_2m_max[dayIndex])}° / ${Math.round(forecastData.daily.temperature_2m_min[dayIndex])}°`
       );
 
-      updateDay(
-        "weatherConditions",
-        weatherCodeToText(forecastData.daily.weather_code[dayIndex])
-      );
+      updateDay("weatherConditions", weatherCodeToText(forecastData.daily.weather_code[dayIndex]));
 
       updateDay(
         "sunTimes",
         `Sunrise ${formatWeatherTime(forecastData.daily.sunrise[dayIndex])} / Sunset ${formatWeatherTime(forecastData.daily.sunset[dayIndex])}`
       );
-    } catch (error) {
+    } catch {
       alert("Weather lookup failed. You can still enter it manually.");
     }
   };
@@ -322,14 +287,15 @@ export default function App() {
         @media print {
           .no-print { display: none !important; }
           body { background: white; }
-          .preview { box-shadow: none !important; border: none !important; }
+          .preview { box-shadow: none !important; border: none !important; border-radius: 0 !important; }
           .day-section, .people-section, .location-section, .attachments-section { page-break-inside: avoid; }
+          a { color: black; text-decoration: none; }
         }
       `}</style>
 
       <div className="no-print" style={styles.editor}>
         <h1>CIF Call Sheet Builder</h1>
-        <p style={styles.muted}>Attachments / Documents Added</p>
+        <p style={styles.muted}>Polished PDF Layout</p>
 
         <Section title="Project Info">
           <Input label="Project Name" value={projectName} onChange={setProjectName} />
@@ -452,25 +418,16 @@ export default function App() {
 
       <div className="preview" style={styles.preview}>
         <div style={styles.previewHeader}>
-  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-    <div style={styles.eyebrow}>Production Call Sheet</div>
-
-    <h1 style={styles.previewTitle}>
-      {projectName || "Project Name"}
-    </h1>
-
-    <div style={styles.headerMetaRow}>
-      <span><strong>Client:</strong> {clientName || "Client Name"}</span>
-      <span><strong>Total Shoot Days:</strong> {shootDays.length}</span>
-    </div>
-  </div>
-
-  {logo ? (
-    <img src={logo} alt="Logo" style={styles.logoImage} />
-  ) : (
-    <div style={styles.logoBox}>CIF</div>
-  )}
-</div>
+          <div>
+            <div style={styles.eyebrow}>Production Call Sheet</div>
+            <h1 style={styles.previewTitle}>{projectName || "Project Name"}</h1>
+            <div style={styles.headerMetaRow}>
+              <span><strong>Client:</strong> {clientName || "Client Name"}</span>
+              <span><strong>Shoot Days:</strong> {shootDays.length}</span>
+            </div>
+          </div>
+          {logo ? <img src={logo} alt="Logo" style={styles.logoImage} /> : <div style={styles.logoBox}>CIF</div>}
+        </div>
 
         {shootDays.map((day) => (
           <div key={day.id} className="day-section" style={styles.daySection}>
@@ -603,31 +560,23 @@ const styles = {
   dangerButton: { padding: "10px 12px", borderRadius: 12, border: "1px solid #fecaca", background: "#fff1f2", color: "#be123c", cursor: "pointer", fontWeight: "bold" },
   smallDangerButton: { padding: "8px 10px", borderRadius: 10, border: "1px solid #fecaca", background: "#fff1f2", color: "#be123c", cursor: "pointer", fontWeight: "bold" },
   printButton: { padding: "14px 18px", borderRadius: 16, background: "#0f172a", color: "white", border: "none", fontWeight: "bold", cursor: "pointer", fontSize: 16 },
-  preview: { background: "white", borderRadius: 20, padding: 32, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", alignSelf: "start" },
+  preview: { background: "white", borderRadius: 20, padding: 36, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", alignSelf: "start" },
   previewHeader: { display: "flex", justifyContent: "space-between", gap: 24, borderBottom: "8px solid #020617", paddingBottom: 24 },
   eyebrow: { fontSize: 11, fontWeight: "900", textTransform: "uppercase", letterSpacing: 3, color: "#64748b" },
-  previewTitle: { fontSize: 28, margin: "8px 0", color: "#020617" },
-  projectTitle: { margin: 0, fontSize: 18, color: "#020617" },
-  clientText: { color: "#020617", fontWeight: "900", fontSize: 18 },
+  previewTitle: { fontSize: 34, margin: "8px 0", color: "#020617", letterSpacing: -0.8 },
+  headerMetaRow: { display: "flex", gap: 20, fontSize: 14, color: "#334155", marginTop: 6 },
   logoBox: { width: 90, height: 90, background: "#020617", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "900", fontSize: 28, borderRadius: 16 },
   logoPreview: { maxWidth: 160, maxHeight: 80, objectFit: "contain", border: "1px solid #e2e8f0", borderRadius: 12, padding: 8 },
-  logoImage: { maxWidth: 160, maxHeight: 90, objectFit: "contain" },
-  daySection: { marginTop: 32 },
+  logoImage: { maxWidth: 170, maxHeight: 95, objectFit: "contain" },
+  daySection: { marginTop: 34 },
   dayHeader: { display: "flex", justifyContent: "space-between", gap: 24, borderBottom: "2px solid #020617", paddingBottom: 14, marginBottom: 16 },
   dayTitle: { margin: "4px 0 0 0", fontSize: 28 },
-  dayMeta: { textAlign: "right", fontSize: 14, color: "#475569", lineHeight: 1.6 },
-  peopleSection: { marginTop: 36 },
+  dayMeta: { textAlign: "right", fontSize: 14, color: "#334155", lineHeight: 1.6 },
+  peopleSection: { marginTop: 38 },
   previewSectionTitle: { borderBottom: "4px solid #020617", paddingBottom: 8, marginBottom: 16, fontSize: 24 },
   locationCard: { border: "1px solid #e2e8f0", borderRadius: 14, padding: 16, marginBottom: 16, background: "#f8fafc", lineHeight: 1.5 },
   table: { width: "100%", borderCollapse: "collapse", fontSize: 14 },
   th: { textAlign: "left", background: "#020617", color: "white", padding: "10px 12px", fontSize: 12, textTransform: "uppercase" },
   td: { borderTop: "1px solid #e2e8f0", padding: "10px 12px", verticalAlign: "top" },
   tdStrong: { borderTop: "1px solid #e2e8f0", padding: "10px 12px", verticalAlign: "top", fontWeight: "900" },
-  headerMetaRow: {
-  display: "flex",
-  gap: 20,
-  fontSize: 14,
-  color: "#334155",
-  marginTop: 6,
-},
 };
