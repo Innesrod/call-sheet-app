@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import html2pdf from "html2pdf.js";
 
-const STORAGE_KEY = "cif-call-sheet-stable-v2";
+const PROJECTS_KEY = "cif-call-sheet-projects-v1";
+const LAST_PROJECT_KEY = "cif-call-sheet-last-project-v1";
 
 function createDay(number) {
   return {
@@ -59,17 +60,17 @@ const createAttachment = () => ({
 const getMapLink = (address) =>
   address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : "";
 
-function loadProject() {
+function loadProjects() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : null;
+    const saved = localStorage.getItem(PROJECTS_KEY);
+    return saved ? JSON.parse(saved) : {};
   } catch {
-    return null;
+    return {};
   }
 }
 
-function saveProject(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+function saveProjects(projects) {
+  localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
 }
 
 function formatDate(value) {
@@ -84,29 +85,42 @@ function formatDate(value) {
   });
 }
 
+function createBlankProject() {
+  return {
+    projectName: "",
+    clientName: "",
+    logo: "",
+    shootDays: [createDay(1)],
+    crew: [{ ...createCrewMember(), role: "DP / Producer", callTime: "8:30 AM" }],
+    clients: [{ ...createClient(), role: "Client Contact", callTime: "No Call" }],
+    locations: [{ ...createLocation(), name: "Main Location" }],
+    attachments: [createAttachment()],
+  };
+}
+
 export default function App() {
-  const saved = loadProject();
+  const initialProjects = loadProjects();
+  const lastProjectName = localStorage.getItem(LAST_PROJECT_KEY);
+  const initialProject =
+    lastProjectName && initialProjects[lastProjectName]
+      ? initialProjects[lastProjectName]
+      : createBlankProject();
 
-  const [projectName, setProjectName] = useState(saved?.projectName || "");
-  const [clientName, setClientName] = useState(saved?.clientName || "");
-  const [logo, setLogo] = useState(saved?.logo || "");
-  const [shootDays, setShootDays] = useState(saved?.shootDays || [createDay(1)]);
+  const [savedProjects, setSavedProjects] = useState(initialProjects);
+  const [selectedProjectName, setSelectedProjectName] = useState(lastProjectName || "");
+  const [saveAsName, setSaveAsName] = useState(lastProjectName || "");
+
+  const [projectName, setProjectName] = useState(initialProject.projectName || "");
+  const [clientName, setClientName] = useState(initialProject.clientName || "");
+  const [logo, setLogo] = useState(initialProject.logo || "");
+  const [shootDays, setShootDays] = useState(initialProject.shootDays || [createDay(1)]);
   const [activeDayIndex, setActiveDayIndex] = useState(0);
+  const [crew, setCrew] = useState(initialProject.crew || []);
+  const [clients, setClients] = useState(initialProject.clients || []);
+  const [locations, setLocations] = useState(initialProject.locations || []);
+  const [attachments, setAttachments] = useState(initialProject.attachments || []);
 
-  const [crew, setCrew] = useState(
-    saved?.crew || [{ ...createCrewMember(), role: "DP / Producer", callTime: "8:30 AM" }]
-  );
-
-  const [clients, setClients] = useState(
-    saved?.clients || [{ ...createClient(), role: "Client Contact", callTime: "No Call" }]
-  );
-
-  const [locations, setLocations] = useState(
-    saved?.locations || [{ ...createLocation(), name: "Main Location" }]
-  );
-
-  const [attachments, setAttachments] = useState(saved?.attachments || [createAttachment()]);
-  const activeDay = shootDays[activeDayIndex];
+  const activeDay = shootDays[activeDayIndex] || shootDays[0];
 
   const currentProject = {
     projectName,
@@ -119,15 +133,82 @@ export default function App() {
     attachments,
   };
 
-  const handleSave = () => {
-    saveProject(currentProject);
+  const loadProjectIntoEditor = (project, name = "") => {
+    setProjectName(project.projectName || "");
+    setClientName(project.clientName || "");
+    setLogo(project.logo || "");
+    setShootDays(project.shootDays || [createDay(1)]);
+    setCrew(project.crew || []);
+    setClients(project.clients || []);
+    setLocations(project.locations || []);
+    setAttachments(project.attachments || []);
+    setActiveDayIndex(0);
+    setSelectedProjectName(name);
+    setSaveAsName(name);
+    if (name) localStorage.setItem(LAST_PROJECT_KEY, name);
+  };
+
+  const handleSaveProject = () => {
+    const name = saveAsName.trim() || projectName.trim();
+
+    if (!name) {
+      alert("Please enter a project save name.");
+      return;
+    }
+
+    const updatedProjects = {
+      ...savedProjects,
+      [name]: currentProject,
+    };
+
+    saveProjects(updatedProjects);
+    setSavedProjects(updatedProjects);
+    setSelectedProjectName(name);
+    setSaveAsName(name);
+    localStorage.setItem(LAST_PROJECT_KEY, name);
     alert("Project saved.");
   };
 
+  const handleOpenProject = (name) => {
+    if (!name) return;
+    const project = savedProjects[name];
+
+    if (!project) {
+      alert("Saved project not found.");
+      return;
+    }
+
+    loadProjectIntoEditor(project, name);
+  };
+
+  const handleDeleteProject = () => {
+    if (!selectedProjectName) {
+      alert("Select a saved project to delete.");
+      return;
+    }
+
+    if (!confirm(`Delete saved project "${selectedProjectName}"?`)) return;
+
+    const updatedProjects = { ...savedProjects };
+    delete updatedProjects[selectedProjectName];
+
+    saveProjects(updatedProjects);
+    setSavedProjects(updatedProjects);
+    localStorage.removeItem(LAST_PROJECT_KEY);
+    setSelectedProjectName("");
+    setSaveAsName("");
+    alert("Saved project deleted.");
+  };
+
+  const handleNewProject = () => {
+    if (!confirm("Start a new blank project? Unsaved changes will be lost.")) return;
+    localStorage.removeItem(LAST_PROJECT_KEY);
+    loadProjectIntoEditor(createBlankProject(), "");
+  };
+
   const handleReset = () => {
-    if (!confirm("Reset this project? This clears the saved browser project.")) return;
-    localStorage.removeItem(STORAGE_KEY);
-    window.location.reload();
+    if (!confirm("Clear the current editor? Saved projects will remain.")) return;
+    loadProjectIntoEditor(createBlankProject(), "");
   };
 
   const updateDay = (field, value) => {
@@ -197,29 +278,17 @@ export default function App() {
     );
   };
 
-  const updateCrew = (index, field, value) => {
-    setCrew((items) =>
-      items.map((item, i) => (i === index ? { ...item, [field]: value } : item))
-    );
-  };
+  const updateCrew = (index, field, value) =>
+    setCrew((items) => items.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
 
-  const updateClient = (index, field, value) => {
-    setClients((items) =>
-      items.map((item, i) => (i === index ? { ...item, [field]: value } : item))
-    );
-  };
+  const updateClient = (index, field, value) =>
+    setClients((items) => items.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
 
-  const updateLocation = (index, field, value) => {
-    setLocations((items) =>
-      items.map((item, i) => (i === index ? { ...item, [field]: value } : item))
-    );
-  };
+  const updateLocation = (index, field, value) =>
+    setLocations((items) => items.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
 
-  const updateAttachment = (index, field, value) => {
-    setAttachments((items) =>
-      items.map((item, i) => (i === index ? { ...item, [field]: value } : item))
-    );
-  };
+  const updateAttachment = (index, field, value) =>
+    setAttachments((items) => items.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
 
   const handleLogoUpload = (file) => {
     if (!file) return;
@@ -305,52 +374,84 @@ export default function App() {
   return (
     <div className="app-page" style={styles.page}>
       <style>{`
-  @media print {
-    .no-print { display: none !important; }
+        @media print {
+          .no-print { display: none !important; }
 
-    .app-page {
-      display: block !important;
-      padding: 0 !important;
-      background: white !important;
-    }
+          .app-page {
+            display: block !important;
+            padding: 0 !important;
+            background: white !important;
+          }
 
-    .preview {
-      width: 100% !important;
-      max-width: none !important;
-      box-shadow: none !important;
-      border: none !important;
-      border-radius: 0 !important;
-      padding: 0.35in !important;
-      margin: 0 auto !important;
-    }
+          body { background: white; margin: 0; }
 
-    body {
-      background: white;
-      margin: 0;
-    }
+          .preview {
+            width: 100% !important;
+            max-width: none !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0.35in !important;
+            margin: 0 auto !important;
+          }
 
-    .day-section,
-    .people-section,
-    .location-section,
-    .attachments-section {
-      page-break-inside: avoid;
-    }
+          .day-section, .people-section, .location-section, .attachments-section {
+            page-break-inside: avoid;
+          }
 
-    a {
-      color: black;
-      text-decoration: none;
-    }
-  }
+          a { color: black; text-decoration: none; }
+        }
 
-  @page {
-    size: letter;
-    margin: 0.35in;
-  }
-`}</style>
+        @page {
+          size: letter;
+          margin: 0.35in;
+        }
+      `}</style>
 
       <div className="no-print" style={styles.editor}>
         <h1>CIF Call Sheet Builder</h1>
-        <p style={styles.muted}>Stable working version</p>
+        <p style={styles.muted}>Project Manager Added</p>
+
+        <Section title="Project Manager">
+          <Input
+            label="Save / Project Name"
+            value={saveAsName}
+            onChange={setSaveAsName}
+            placeholder="Example: ACS Flagstaff Event"
+          />
+
+          <button onClick={handleSaveProject} style={styles.printButton}>
+            Save Project
+          </button>
+
+          <label style={styles.label}>
+            Open Saved Project
+            <select
+              value={selectedProjectName}
+              onChange={(e) => handleOpenProject(e.target.value)}
+              style={styles.input}
+            >
+              <option value="">Select saved project...</option>
+              {Object.keys(savedProjects).map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button onClick={handleDeleteProject} style={styles.dangerButton}>
+            Delete Selected Project
+          </button>
+
+          <button onClick={handleNewProject} style={styles.secondaryButton}>
+            New Blank Project
+          </button>
+
+          <button onClick={handleReset} style={styles.dangerButton}>
+            Reset Current Editor
+          </button>
+        </Section>
 
         <Section title="Project Info">
           <Input label="Project Name" value={projectName} onChange={setProjectName} />
@@ -360,16 +461,7 @@ export default function App() {
         <Section title="Logo / Branding">
           <input type="file" accept="image/*" onChange={(e) => handleLogoUpload(e.target.files?.[0])} />
           {logo && <img src={logo} alt="Logo" style={styles.logoPreview} />}
-          {logo && (
-            <button onClick={() => setLogo("")} style={styles.smallDangerButton}>
-              Clear Logo
-            </button>
-          )}
-        </Section>
-
-        <Section title="Save / Reset">
-          <button onClick={handleSave} style={styles.printButton}>Save Project</button>
-          <button onClick={handleReset} style={styles.dangerButton}>Reset Project</button>
+          {logo && <button onClick={() => setLogo("")} style={styles.smallDangerButton}>Clear Logo</button>}
         </Section>
 
         <Section title="Shoot Days">
