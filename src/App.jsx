@@ -303,16 +303,50 @@ export default function App() {
   };
 
   return (
-    <div style={styles.page}>
+    <div className="app-page" style={styles.page}>
       <style>{`
-        @media print {
-          .no-print { display: none !important; }
-          body { background: white; }
-          .preview { box-shadow: none !important; border: none !important; border-radius: 0 !important; }
-          .day-section, .people-section, .location-section, .attachments-section { page-break-inside: avoid; }
-          a { color: black; text-decoration: none; }
-        }
-      `}</style>
+  @media print {
+    .no-print { display: none !important; }
+
+    .app-page {
+      display: block !important;
+      padding: 0 !important;
+      background: white !important;
+    }
+
+    .preview {
+      width: 100% !important;
+      max-width: none !important;
+      box-shadow: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+      padding: 0.35in !important;
+      margin: 0 auto !important;
+    }
+
+    body {
+      background: white;
+      margin: 0;
+    }
+
+    .day-section,
+    .people-section,
+    .location-section,
+    .attachments-section {
+      page-break-inside: avoid;
+    }
+
+    a {
+      color: black;
+      text-decoration: none;
+    }
+  }
+
+  @page {
+    size: letter;
+    margin: 0.35in;
+  }
+`}</style>
 
       <div className="no-print" style={styles.editor}>
         <h1>CIF Call Sheet Builder</h1>
