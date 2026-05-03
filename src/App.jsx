@@ -312,7 +312,31 @@ export default function App() {
     setSelectedCrewLibraryId("");
     alert("Crew member deleted from library.");
   };
+const loadSelectedCrewForEditing = () => {
+  if (!selectedCrewLibraryId) {
+    alert("Select a saved crew member first.");
+    return;
+  }
 
+  const member = crewLibrary.find(
+    (m) => String(m.id) === String(selectedCrewLibraryId)
+  );
+
+  if (!member) {
+    alert("Crew member not found.");
+    return;
+  }
+
+  setCrew((items) => [
+    {
+      ...member,
+      id: member.id,
+    },
+    ...items,
+  ]);
+
+  alert(`${member.name} loaded into crew list for editing.`);
+};
   const updateDay = (field, value) => {
     setShootDays((days) =>
       days.map((day, index) =>
@@ -694,7 +718,9 @@ export default function App() {
             <button onClick={addCrewFromLibrary} style={styles.secondaryButton}>
               Add Saved Crew Member
             </button>
-
+            <button onClick={loadSelectedCrewForEditing} style={styles.secondaryButton}>
+            Load Selected Crew for Editing
+            </button>
             <button onClick={deleteCrewFromLibrary} style={styles.dangerButton}>
               Delete Selected Saved Crew
             </button>
