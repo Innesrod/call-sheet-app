@@ -305,21 +305,13 @@ const handleDownloadPdf = () => {
 };
 
   return (
-   <style>{`
+ <style>{`
   @media print {
     .no-print { display: none !important; }
     body { background: white; }
-    .preview { 
-      box-shadow: none !important; 
-      border: none !important; 
-      width: 8.5in !important;
-      margin: 0 auto !important;
-    }
-  }
-
-  @page {
-    size: letter;
-    margin: 0.5in;
+    .preview { box-shadow: none !important; border: none !important; border-radius: 0 !important; }
+    .day-section, .people-section, .location-section, .attachments-section { page-break-inside: avoid; }
+    a { color: black; text-decoration: none; }
   }
 `}</style>
 
