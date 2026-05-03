@@ -221,7 +221,7 @@ export default function App() {
   };
 
   const autoFillWeather = async () => {
-    const location = locations.find((item) => item.address || item.name);
+    const location = locations.find((item) => item.address);
 
     if (!location) return alert("Please add a location first.");
     if (!activeDay.date) return alert("Please add a shoot date first.");
