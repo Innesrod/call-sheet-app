@@ -292,28 +292,36 @@ const handleDownloadPdf = () => {
     return;
   }
 
-  const options = {
-    margin: 0.35,
-    filename: `${projectName || "call-sheet"}.pdf`,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
-  };
+ const options = {
+  margin: 0.5,
+  filename: `${projectName || "call-sheet"}.pdf`,
+  image: { type: "jpeg", quality: 0.98 },
+  html2canvas: { scale: 3, useCORS: true },
+  jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+  pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+};
 
   html2pdf().set(options).from(element).save();
 };
 
   return (
-    <div style={styles.page}>
-      <style>{`
-        @media print {
-          .no-print { display: none !important; }
-          body { background: white; }
-          .preview { box-shadow: none !important; border: none !important; border-radius: 0 !important; }
-          .day-section, .people-section, .location-section, .attachments-section { page-break-inside: avoid; }
-          a { color: black; text-decoration: none; }
-        }
-      `}</style>
+   <style>{`
+  @media print {
+    .no-print { display: none !important; }
+    body { background: white; }
+    .preview { 
+      box-shadow: none !important; 
+      border: none !important; 
+      width: 8.5in !important;
+      margin: 0 auto !important;
+    }
+  }
+
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+`}</style>
 
       <div className="no-print" style={styles.editor}>
         <h1>CIF Call Sheet Builder</h1>
@@ -600,7 +608,16 @@ const styles = {
   dangerButton: { padding: "10px 12px", borderRadius: 12, border: "1px solid #fecaca", background: "#fff1f2", color: "#be123c", cursor: "pointer", fontWeight: "bold" },
   smallDangerButton: { padding: "8px 10px", borderRadius: 10, border: "1px solid #fecaca", background: "#fff1f2", color: "#be123c", cursor: "pointer", fontWeight: "bold" },
   printButton: { padding: "14px 18px", borderRadius: 16, background: "#0f172a", color: "white", border: "none", fontWeight: "bold", cursor: "pointer", fontSize: 16 },
-  preview: { background: "white", borderRadius: 20, padding: 36, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", alignSelf: "start" },
+
+preview: {
+  background: "white",
+  width: "8.5in",
+  minHeight: "11in",
+  padding: "0.5in",
+  margin: "0 auto",
+  boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+  alignSelf: "start"
+},
   previewHeader: { display: "flex", justifyContent: "space-between", gap: 24, borderBottom: "8px solid #020617", paddingBottom: 24 },
   eyebrow: { fontSize: 11, fontWeight: "900", textTransform: "uppercase", letterSpacing: 3, color: "#64748b" },
   previewTitle: { fontSize: 34, margin: "8px 0", color: "#020617", letterSpacing: -0.8 },
