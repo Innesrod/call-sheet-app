@@ -623,4 +623,11 @@ const styles = {
   th: { textAlign: "left", background: "#020617", color: "white", padding: "10px 12px", fontSize: 12, textTransform: "uppercase" },
   td: { borderTop: "1px solid #e2e8f0", padding: "10px 12px", verticalAlign: "top" },
   tdStrong: { borderTop: "1px solid #e2e8f0", padding: "10px 12px", verticalAlign: "top", fontWeight: "900" },
+  headerMetaRow: {
+  display: "flex",
+  gap: 20,
+  fontSize: 14,
+  color: "#334155",
+  marginTop: 6,
+},
 };
