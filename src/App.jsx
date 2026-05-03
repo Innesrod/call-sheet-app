@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const STORAGE_KEY = "cif-call-sheet-project-weather";
+const STORAGE_KEY = "cif-call-sheet-project-weather-docs";
 
 function createDay(number) {
   return {
@@ -46,6 +46,14 @@ const createLocation = () => ({
   loadIn: "",
   notes: "",
 });
+
+const createAttachment = () => ({
+  id: Date.now() + Math.random(),
+  name: "",
+  url: "",
+  notes: "",
+});
+
 const weatherCodeToText = (code) => {
   const codes = {
     0: "Clear",
@@ -76,11 +84,9 @@ const formatWeatherTime = (value) => {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 };
+
 const getMapLink = (address) =>
   address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : "";
 
@@ -119,6 +125,8 @@ export default function App() {
     saved?.locations || [{ ...createLocation(), name: "Main Location" }]
   );
 
+  const [attachments, setAttachments] = useState(saved?.attachments || [createAttachment()]);
+
   const activeDay = shootDays[activeDayIndex];
 
   const currentProject = {
@@ -129,6 +137,7 @@ export default function App() {
     crew,
     clients,
     locations,
+    attachments,
   };
 
   const handleSave = () => {
@@ -215,93 +224,96 @@ export default function App() {
   const updateLocation = (index, field, value) =>
     setLocations((items) => items.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
 
+  const updateAttachment = (index, field, value) =>
+    setAttachments((items) => items.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
+
   const handleLogoUpload = (file) => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => setLogo(reader.result);
     reader.readAsDataURL(file);
   };
-const autoFillWeather = async () => {
-  const location = locations.find((item) => item.address || item.name);
 
-  if (!location) {
-    alert("Please add a location first.");
-    return;
-  }
+  const autoFillWeather = async () => {
+    const location = locations.find((item) => item.address || item.name);
 
-  if (!activeDay.date) {
-    alert("Please add a shoot date first.");
-    return;
-  }
+    if (!location) {
+      alert("Please add a location first.");
+      return;
+    }
 
-  const address = location.address || "";
-  const name = location.name || "";
+    if (!activeDay.date) {
+      alert("Please add a shoot date first.");
+      return;
+    }
 
-  const addressParts = address
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
+    const address = location.address || "";
+    const name = location.name || "";
 
-  const weatherQueries = [
-    address,
-    addressParts.slice(-2).join(", "),
-    addressParts.slice(-1).join(", "),
-    name,
-  ].filter(Boolean);
+    const addressParts = address
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean);
 
-  try {
-    let place = null;
+    const weatherQueries = [
+      address,
+      addressParts.slice(-2).join(", "),
+      addressParts.slice(-1).join(", "),
+      name,
+    ].filter(Boolean);
 
-    for (const query of weatherQueries) {
-      const geoResponse = await fetch(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`
+    try {
+      let place = null;
+
+      for (const query of weatherQueries) {
+        const geoResponse = await fetch(
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`
+        );
+
+        const geoData = await geoResponse.json();
+
+        if (geoData?.results?.[0]) {
+          place = geoData.results[0];
+          break;
+        }
+      }
+
+      if (!place) {
+        alert("Could not find weather. Try using City, State only.");
+        return;
+      }
+
+      const forecastResponse = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&timezone=auto&start_date=${activeDay.date}&end_date=${activeDay.date}`
       );
 
-      const geoData = await geoResponse.json();
+      const forecastData = await forecastResponse.json();
+      const dayIndex = forecastData?.daily?.time?.indexOf(activeDay.date);
 
-      if (geoData?.results?.[0]) {
-        place = geoData.results[0];
-        break;
+      if (dayIndex < 0) {
+        alert("Forecast is not available for that date yet.");
+        return;
       }
+
+      updateDay(
+        "weatherTemp",
+        `${Math.round(forecastData.daily.temperature_2m_max[dayIndex])}° / ${Math.round(forecastData.daily.temperature_2m_min[dayIndex])}°`
+      );
+
+      updateDay(
+        "weatherConditions",
+        weatherCodeToText(forecastData.daily.weather_code[dayIndex])
+      );
+
+      updateDay(
+        "sunTimes",
+        `Sunrise ${formatWeatherTime(forecastData.daily.sunrise[dayIndex])} / Sunset ${formatWeatherTime(forecastData.daily.sunset[dayIndex])}`
+      );
+    } catch (error) {
+      alert("Weather lookup failed. You can still enter it manually.");
     }
+  };
 
-    if (!place) {
-      alert("Could not find weather. Try using City, State only.");
-      return;
-    }
-
-    const forecastResponse = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&timezone=auto&start_date=${activeDay.date}&end_date=${activeDay.date}`
-    );
-
-    const forecastData = await forecastResponse.json();
-    const dayIndex = forecastData?.daily?.time?.indexOf(activeDay.date);
-
-    if (dayIndex < 0) {
-      alert("Forecast is not available for that date yet.");
-      return;
-    }
-
-    updateDay(
-      "weatherTemp",
-      `${Math.round(forecastData.daily.temperature_2m_max[dayIndex])}° / ${Math.round(forecastData.daily.temperature_2m_min[dayIndex])}°`
-    );
-
-    updateDay(
-      "weatherConditions",
-      weatherCodeToText(forecastData.daily.weather_code[dayIndex])
-    );
-
-    updateDay(
-      "sunTimes",
-      `Sunrise ${formatWeatherTime(forecastData.daily.sunrise[dayIndex])} / Sunset ${formatWeatherTime(forecastData.daily.sunset[dayIndex])}`
-    );
-
-    
-  } catch (error) {
-    alert("Weather lookup failed. You can still enter it manually.");
-  }
-};
   const handlePrint = () => window.print();
 
   return (
@@ -311,13 +323,13 @@ const autoFillWeather = async () => {
           .no-print { display: none !important; }
           body { background: white; }
           .preview { box-shadow: none !important; border: none !important; }
-          .day-section, .people-section, .location-section { page-break-inside: avoid; }
+          .day-section, .people-section, .location-section, .attachments-section { page-break-inside: avoid; }
         }
       `}</style>
 
       <div className="no-print" style={styles.editor}>
         <h1>CIF Call Sheet Builder</h1>
-        <p style={styles.muted}>Phase 6: Manual Weather Fields</p>
+        <p style={styles.muted}>Attachments / Documents Added</p>
 
         <Section title="Project Info">
           <Input label="Project Name" value={projectName} onChange={setProjectName} />
@@ -360,10 +372,7 @@ const autoFillWeather = async () => {
 
           <div style={styles.weatherBox}>
             <h3 style={styles.weatherTitle}>Weather</h3>
-
-            <button onClick={autoFillWeather} style={styles.secondaryButton}>
-            Auto Fill Weather
-            </button>
+            <button onClick={autoFillWeather} style={styles.secondaryButton}>Auto Fill Weather</button>
             <Input label="Weather Temp" value={activeDay.weatherTemp} onChange={(v) => updateDay("weatherTemp", v)} placeholder="Example: 72° / 48°" />
             <Input label="Weather Conditions" value={activeDay.weatherConditions} onChange={(v) => updateDay("weatherConditions", v)} placeholder="Example: Sunny, light wind" />
             <Input label="Sunrise / Sunset" value={activeDay.sunTimes} onChange={(v) => updateDay("sunTimes", v)} placeholder="Example: Sunrise 6:18 AM / Sunset 7:44 PM" />
@@ -396,6 +405,18 @@ const autoFillWeather = async () => {
             </div>
           ))}
           <button onClick={() => setLocations((items) => [...items, createLocation()])} style={styles.secondaryButton}>+ Add Location</button>
+        </Section>
+
+        <Section title="Attachments / Documents">
+          {attachments.map((attachment, index) => (
+            <div key={attachment.id} style={styles.card}>
+              <Input label="Document Name" value={attachment.name} onChange={(v) => updateAttachment(index, "name", v)} placeholder="Example: Shot List" />
+              <Input label="Document Link" value={attachment.url} onChange={(v) => updateAttachment(index, "url", v)} placeholder="Paste Google Drive, Dropbox, or PDF link" />
+              <Textarea label="Notes" value={attachment.notes} onChange={(v) => updateAttachment(index, "notes", v)} />
+              <button onClick={() => setAttachments((items) => items.length > 1 ? items.filter((_, i) => i !== index) : items)} style={styles.smallDangerButton}>Remove Document</button>
+            </div>
+          ))}
+          <button onClick={() => setAttachments((items) => [...items, createAttachment()])} style={styles.secondaryButton}>+ Add Document</button>
         </Section>
 
         <Section title="Crew / Vendors">
@@ -477,6 +498,17 @@ const autoFillWeather = async () => {
               <p><strong>Notes:</strong> {location.notes || "—"}</p>
             </div>
           ))}
+        </PreviewSection>
+
+        <PreviewSection title="Attachments / Documents">
+          <Table
+            headers={["Document", "Link", "Notes"]}
+            rows={attachments.map((doc) => [
+              doc.name || "Document",
+              doc.url ? <a href={doc.url} target="_blank" rel="noreferrer">Open Link</a> : "—",
+              doc.notes,
+            ])}
+          />
         </PreviewSection>
 
         <PreviewSection title="Crew / Vendors">
