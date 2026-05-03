@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import html2pdf from "html2pdf.js";
 
 const STORAGE_KEY = "cif-call-sheet-project-final-weather-location";
 
@@ -281,7 +282,26 @@ export default function App() {
   }
 };
 
-  const handlePrint = () => window.print();
+ const handlePrint = () => window.print();
+
+const handleDownloadPdf = () => {
+  const element = document.querySelector(".preview");
+
+  if (!element) {
+    alert("Could not find call sheet preview.");
+    return;
+  }
+
+  const options = {
+    margin: 0.35,
+    filename: `${projectName || "call-sheet"}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+  };
+
+  html2pdf().set(options).from(element).save();
+};
 
   return (
     <div style={styles.page}>
@@ -424,7 +444,13 @@ export default function App() {
           <button onClick={() => setClients((items) => [...items, createClient()])} style={styles.secondaryButton}>+ Add Client</button>
         </Section>
 
-        <button onClick={handlePrint} style={styles.printButton}>Print / Save as PDF</button>
+        <button onClick={handlePrint} style={styles.printButton}>
+  Print
+</button>
+
+<button onClick={handleDownloadPdf} style={styles.printButton}>
+  Download PDF
+</button>
       </div>
 
       <div className="preview" style={styles.preview}>
