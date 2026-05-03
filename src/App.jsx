@@ -234,7 +234,7 @@ export default function App() {
     return;
   }
 
-  const API_KEY = 8809bc59713d4cd6a5b162755260305 ;
+const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
 
   try {
     const response = await fetch(
