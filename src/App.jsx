@@ -223,23 +223,9 @@ export default function App() {
   };
   const autoFillWeather = async () => {
   const location = locations.find((item) => item.address || item.name);
-const address = location?.address || "";
-const name = location?.name || "";
 
-const addressParts = address
-  .split(",")
-  .map((part) => part.trim())
-  .filter(Boolean);
-
-const weatherQueries = [
-  address,
-  addressParts.slice(-2).join(", "),
-  addressParts.slice(-1).join(", "),
-  name,
-].filter(Boolean);
-
-  if (!locationQuery) {
-    alert("Please add a location address first.");
+  if (!location) {
+    alert("Please add a location first.");
     return;
   }
 
@@ -248,15 +234,78 @@ const weatherQueries = [
     return;
   }
 
+  const address = location.address || "";
+  const name = location.name || "";
+
+  const addressParts = address
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const weatherQueries = [
+    address,
+    addressParts.slice(-2).join(", "),
+    addressParts.slice(-1).join(", "),
+    name,
+  ].filter(Boolean);
+
   try {
     let place = null;
 
-for (const query of weatherQueries) {
-  const geoResponse = await fetch(
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
-      query
-    )}&count=1&language=en&format=json`
-  );
+    for (const query of weatherQueries) {
+      const geoResponse = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`
+      );
+
+      const geoData = await geoResponse.json();
+
+      if (geoData?.results?.[0]) {
+        place = geoData.results[0];
+        break;
+      }
+    }
+
+    if (!place) {
+      alert("Could not find weather. Try using City, State only.");
+      return;
+    }
+
+    const forecastResponse = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&timezone=auto&start_date=${activeDay.date}&end_date=${activeDay.date}`
+    );
+
+    const forecastData = await forecastResponse.json();
+    const dayIndex = forecastData?.daily?.time?.indexOf(activeDay.date);
+
+    if (dayIndex < 0) {
+      alert("Forecast is not available for that date yet.");
+      return;
+    }
+
+    updateDay(
+      "weatherTemp",
+      `${Math.round(forecastData.daily.temperature_2m_max[dayIndex])}° / ${Math.round(
+        forecastData.daily.temperature_2m_min[dayIndex]
+      )}°`
+    );
+
+    updateDay(
+      "weatherConditions",
+      weatherCodeToText(forecastData.daily.weather_code[dayIndex])
+    );
+
+    updateDay(
+      "sunTimes",
+      `Sunrise ${formatWeatherTime(
+        forecastData.daily.sunrise[dayIndex]
+      )} / Sunset ${formatWeatherTime(forecastData.daily.sunset[dayIndex])}`
+    );
+
+    alert("Weather added.");
+  } catch (error) {
+    alert("Weather lookup failed. You can still enter it manually.");
+  }
+};
 
   const geoData = await geoResponse.json();
 
