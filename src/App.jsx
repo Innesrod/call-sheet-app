@@ -230,11 +230,15 @@ export default function App() {
     const name = location.name || "";
     const addressParts = address.split(",").map((part) => part.trim()).filter(Boolean);
 
-   const weatherQueries = [
-  address,
-  addressParts.slice(-3).join(", "),
+  const cityState =
+  addressParts.length >= 3
+    ? `${addressParts[addressParts.length - 2]}, ${addressParts[addressParts.length - 1]}`
+    : address;
+
+const weatherQueries = [
+  cityState,
   addressParts.slice(-2).join(", "),
-  addressParts.slice(-1).join(", "),
+  address,
   name,
 ].filter(Boolean);
 
