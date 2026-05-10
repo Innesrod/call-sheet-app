@@ -216,7 +216,7 @@ const handleExportProjectJson = () => {
         return;
       }
 
-      loadProject(importedProject);
+    loadProjectIntoEditor(importedProject, importedProject.projectName || "Imported Project");
 
       alert("Project imported successfully.");
     } catch (error) {
