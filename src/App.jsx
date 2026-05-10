@@ -199,6 +199,34 @@ const handleExportProjectJson = () => {
 
   URL.revokeObjectURL(url);
 };
+
+  const handleImportProjectJson = (event) => {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    try {
+      const importedProject = JSON.parse(e.target.result);
+
+      if (!importedProject) {
+        alert("Invalid project file.");
+        return;
+      }
+
+      loadProject(importedProject);
+
+      alert("Project imported successfully.");
+    } catch (error) {
+      alert("Could not import project file.");
+      console.error(error);
+    }
+  };
+
+  reader.readAsText(file);
+};
   const handleOpenProject = (name) => {
     if (!name) return;
     const project = savedProjects[name];
@@ -565,6 +593,16 @@ const loadSelectedCrewForEditing = () => {
           <button onClick={handleExportProjectJson} style={styles.secondaryButton}>
           Export Project File
           </button>
+
+          <label style={styles.secondaryButton}>
+  Import Project File
+  <input
+    type="file"
+    accept=".json"
+    onChange={handleImportProjectJson}
+    style={{ display: "none" }}
+  />
+</label>
           <label style={styles.label}>
             Open Saved Project
             <select
