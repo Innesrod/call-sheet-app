@@ -185,7 +185,20 @@ export default function App() {
     localStorage.setItem(LAST_PROJECT_KEY, name);
     alert("Project saved.");
   };
+const handleExportProjectJson = () => {
+  const fileName = `${projectName || saveAsName || "call-sheet-project"}.json`;
 
+  const dataStr = JSON.stringify(currentProject, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+
+  URL.revokeObjectURL(url);
+};
   const handleOpenProject = (name) => {
     if (!name) return;
     const project = savedProjects[name];
@@ -549,7 +562,9 @@ const loadSelectedCrewForEditing = () => {
           <button onClick={handleSaveProject} style={styles.printButton}>
             Save Project
           </button>
-
+          <button onClick={handleExportProjectJson} style={styles.secondaryButton}>
+          Export Project File
+          </button>
           <label style={styles.label}>
             Open Saved Project
             <select
