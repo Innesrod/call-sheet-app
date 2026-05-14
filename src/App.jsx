@@ -529,7 +529,7 @@ export default function App() {
         </Section>
 
         <Section title="Project Info">
-          <Input label="Project Name" value={projectName} onChange={setProjectName} />
+         <Input label="Session Name" value={projectName} onChange={setProjectName} />
           <Input label="Client Name" value={clientName} onChange={setClientName} />
         </Section>
 
