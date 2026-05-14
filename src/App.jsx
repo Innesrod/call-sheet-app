@@ -594,15 +594,24 @@ const loadSelectedCrewForEditing = () => {
           Export Project File
           </button>
 
-          <label style={styles.secondaryButton}>
-  Import Project File
-  <input
-    type="file"
-    accept=".json"
-    onChange={handleImportProjectJson}
-    style={{ display: "none" }}
-  />
-</label>
+        <div style={{ textAlign: "center", marginTop: "10px" }}>
+  <label
+    style={{
+      ...styles.secondaryButton,
+      display: "inline-block",
+      fontSize: "16px",
+      cursor: "pointer",
+    }}
+  >
+    Import Project File
+    <input
+      type="file"
+      accept=".json"
+      onChange={handleImportProjectJson}
+      style={{ display: "none" }}
+    />
+  </label>
+</div>
           <label style={styles.label}>
             Open Saved Project
             <select
