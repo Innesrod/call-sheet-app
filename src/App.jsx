@@ -612,7 +612,7 @@ const loadSelectedCrewForEditing = () => {
     />
   </label>
 </div>
-          <label style={styles.label}>
+          <button style={styles.label}>
             Open Saved Project
             <select
               value={selectedProjectName}
@@ -626,7 +626,7 @@ const loadSelectedCrewForEditing = () => {
                 </option>
               ))}
             </select>
-          </label>
+         </button>
 
           <button onClick={handleDeleteProject} style={styles.dangerButton}>
             Delete Selected Project
