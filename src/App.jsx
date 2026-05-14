@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import html2pdf from "html2pdf.js";
 
-const PROJECTS_KEY = "cif-call-sheet-projects-v1";
-const LAST_PROJECT_KEY = "cif-call-sheet-last-project-v1";
 const CREW_LIBRARY_KEY = "cif-call-sheet-crew-library-v1";
+const LAST_PROJECT_KEY = "cif-call-sheet-last-project-v1";
 
 function createDay(number) {
   return {
@@ -61,19 +60,6 @@ const createAttachment = () => ({
 const getMapLink = (address) =>
   address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : "";
 
-function loadProjects() {
-  try {
-    const saved = localStorage.getItem(PROJECTS_KEY);
-    return saved ? JSON.parse(saved) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveProjects(projects) {
-  localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
-}
-
 function loadCrewLibrary() {
   try {
     const saved = localStorage.getItem(CREW_LIBRARY_KEY);
@@ -113,29 +99,20 @@ function createBlankProject() {
 }
 
 export default function App() {
-  const initialProjects = loadProjects();
-  const lastProjectName = localStorage.getItem(LAST_PROJECT_KEY);
-  const initialProject =
-    lastProjectName && initialProjects[lastProjectName]
-      ? initialProjects[lastProjectName]
-      : createBlankProject();
+  const blankProject = createBlankProject();
 
-  const [savedProjects, setSavedProjects] = useState(initialProjects);
-  const [selectedProjectName, setSelectedProjectName] = useState(lastProjectName || "");
-  const [saveAsName, setSaveAsName] = useState(lastProjectName || "");
+  const [projectName, setProjectName] = useState(blankProject.projectName);
+  const [clientName, setClientName] = useState(blankProject.clientName);
+  const [logo, setLogo] = useState(blankProject.logo);
+  const [shootDays, setShootDays] = useState(blankProject.shootDays);
+  const [activeDayIndex, setActiveDayIndex] = useState(0);
+  const [crew, setCrew] = useState(blankProject.crew);
+  const [clients, setClients] = useState(blankProject.clients);
+  const [locations, setLocations] = useState(blankProject.locations);
+  const [attachments, setAttachments] = useState(blankProject.attachments);
 
   const [crewLibrary, setCrewLibrary] = useState(loadCrewLibrary());
   const [selectedCrewLibraryId, setSelectedCrewLibraryId] = useState("");
-
-  const [projectName, setProjectName] = useState(initialProject.projectName || "");
-  const [clientName, setClientName] = useState(initialProject.clientName || "");
-  const [logo, setLogo] = useState(initialProject.logo || "");
-  const [shootDays, setShootDays] = useState(initialProject.shootDays || [createDay(1)]);
-  const [activeDayIndex, setActiveDayIndex] = useState(0);
-  const [crew, setCrew] = useState(initialProject.crew || []);
-  const [clients, setClients] = useState(initialProject.clients || []);
-  const [locations, setLocations] = useState(initialProject.locations || []);
-  const [attachments, setAttachments] = useState(initialProject.attachments || []);
 
   const activeDay = shootDays[activeDayIndex] || shootDays[0];
 
@@ -150,7 +127,7 @@ export default function App() {
     attachments,
   };
 
-  const loadProjectIntoEditor = (project, name = "") => {
+  const loadProjectIntoEditor = (project) => {
     setProjectName(project.projectName || "");
     setClientName(project.clientName || "");
     setLogo(project.logo || "");
@@ -160,113 +137,56 @@ export default function App() {
     setLocations(project.locations || []);
     setAttachments(project.attachments || []);
     setActiveDayIndex(0);
-    setSelectedProjectName(name);
-    setSaveAsName(name);
-    if (name) localStorage.setItem(LAST_PROJECT_KEY, name);
+    localStorage.setItem(LAST_PROJECT_KEY, project.projectName || "Imported Project");
   };
 
-  const handleSaveProject = () => {
-    const name = saveAsName.trim() || projectName.trim();
+  const handleExportProjectJson = () => {
+    const safeName = projectName || "call-sheet-project";
+    const fileName = `${safeName}.json`;
 
-    if (!name) {
-      alert("Please enter a project save name.");
-      return;
-    }
+    const dataStr = JSON.stringify(currentProject, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
 
-    const updatedProjects = {
-      ...savedProjects,
-      [name]: currentProject,
-    };
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    link.click();
 
-    saveProjects(updatedProjects);
-    setSavedProjects(updatedProjects);
-    setSelectedProjectName(name);
-    setSaveAsName(name);
-    localStorage.setItem(LAST_PROJECT_KEY, name);
-    alert("Project saved.");
+    URL.revokeObjectURL(url);
   };
-const handleExportProjectJson = () => {
-  const fileName = `${projectName || saveAsName || "call-sheet-project"}.json`;
-
-  const dataStr = JSON.stringify(currentProject, null, 2);
-  const blob = new Blob([dataStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  link.click();
-
-  URL.revokeObjectURL(url);
-};
 
   const handleImportProjectJson = (event) => {
-  const file = event.target.files[0];
+    const file = event.target.files[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  const reader = new FileReader();
+    const reader = new FileReader();
 
-  reader.onload = (e) => {
-    try {
-      const importedProject = JSON.parse(e.target.result);
+    reader.onload = (e) => {
+      try {
+        const importedProject = JSON.parse(e.target.result);
 
-      if (!importedProject) {
-        alert("Invalid project file.");
-        return;
+        if (!importedProject || typeof importedProject !== "object") {
+          alert("Invalid project file.");
+          return;
+        }
+
+        loadProjectIntoEditor(importedProject);
+        alert("Project opened successfully.");
+      } catch (error) {
+        alert("Could not open project file.");
+        console.error(error);
       }
+    };
 
-    loadProjectIntoEditor(importedProject, importedProject.projectName || "Imported Project");
-
-      alert("Project imported successfully.");
-    } catch (error) {
-      alert("Could not import project file.");
-      console.error(error);
-    }
-  };
-
-  reader.readAsText(file);
-};
-  const handleOpenProject = (name) => {
-    if (!name) return;
-    const project = savedProjects[name];
-
-    if (!project) {
-      alert("Saved project not found.");
-      return;
-    }
-
-    loadProjectIntoEditor(project, name);
-  };
-
-  const handleDeleteProject = () => {
-    if (!selectedProjectName) {
-      alert("Select a saved project to delete.");
-      return;
-    }
-
-    if (!confirm(`Delete saved project "${selectedProjectName}"?`)) return;
-
-    const updatedProjects = { ...savedProjects };
-    delete updatedProjects[selectedProjectName];
-
-    saveProjects(updatedProjects);
-    setSavedProjects(updatedProjects);
-    localStorage.removeItem(LAST_PROJECT_KEY);
-    setSelectedProjectName("");
-    setSaveAsName("");
-    alert("Saved project deleted.");
+    reader.readAsText(file);
+    event.target.value = "";
   };
 
   const handleNewProject = () => {
     if (!confirm("Start a new blank project? Unsaved changes will be lost.")) return;
-    localStorage.removeItem(LAST_PROJECT_KEY);
-    loadProjectIntoEditor(createBlankProject(), "");
-  };
-
-  const handleReset = () => {
-    if (!confirm("Clear the current editor? Saved projects will remain.")) return;
-    loadProjectIntoEditor(createBlankProject(), "");
+    loadProjectIntoEditor(createBlankProject());
   };
 
   const saveCrewMemberToLibrary = (member) => {
@@ -276,18 +196,14 @@ const handleExportProjectJson = () => {
     }
 
     const existingIndex = crewLibrary.findIndex(
-      (saved) =>
-        saved.name.trim().toLowerCase() === member.name.trim().toLowerCase() &&
-        saved.phone.trim() === member.phone.trim()
+      (saved) => saved.name.trim().toLowerCase() === member.name.trim().toLowerCase()
     );
 
     let updatedLibrary;
 
     if (existingIndex >= 0) {
       updatedLibrary = crewLibrary.map((saved, index) =>
-        index === existingIndex
-          ? { ...member, id: saved.id }
-          : saved
+        index === existingIndex ? { ...member, id: saved.id } : saved
       );
       alert(`${member.name} updated in crew library.`);
     } else {
@@ -353,31 +269,31 @@ const handleExportProjectJson = () => {
     setSelectedCrewLibraryId("");
     alert("Crew member deleted from library.");
   };
-const loadSelectedCrewForEditing = () => {
-  if (!selectedCrewLibraryId) {
-    alert("Select a saved crew member first.");
-    return;
-  }
 
-  const member = crewLibrary.find(
-    (m) => String(m.id) === String(selectedCrewLibraryId)
-  );
+  const loadSelectedCrewForEditing = () => {
+    if (!selectedCrewLibraryId) {
+      alert("Select a saved crew member first.");
+      return;
+    }
 
-  if (!member) {
-    alert("Crew member not found.");
-    return;
-  }
+    const member = crewLibrary.find((m) => String(m.id) === String(selectedCrewLibraryId));
 
-  setCrew((items) => [
-    {
-      ...member,
-      id: member.id,
-    },
-    ...items,
-  ]);
+    if (!member) {
+      alert("Crew member not found.");
+      return;
+    }
 
-  alert(`${member.name} loaded into crew list for editing.`);
-};
+    setCrew((items) => [
+      {
+        ...member,
+        id: member.id,
+      },
+      ...items,
+    ]);
+
+    alert(`${member.name} loaded into crew list for editing.`);
+  };
+
   const updateDay = (field, value) => {
     setShootDays((days) =>
       days.map((day, index) =>
@@ -577,67 +493,38 @@ const loadSelectedCrewForEditing = () => {
 
       <div className="no-print" style={styles.editor}>
         <h1>CIF Call Sheet Builder</h1>
-        <p style={styles.muted}>Project Manager + Crew Library</p>
+        <p style={styles.muted}>Google Drive Project File Workflow</p>
 
         <Section title="Project Manager">
           <Input
-            label="Save / Project Name"
-            value={saveAsName}
-            onChange={setSaveAsName}
+            label="Project Name"
+            value={projectName}
+            onChange={setProjectName}
             placeholder="Example: ACS Flagstaff Event"
           />
 
-          <button onClick={handleSaveProject} style={styles.printButton}>
-            Save Project
-          </button>
-          <button onClick={handleExportProjectJson} style={styles.secondaryButton}>
-          Export Project File
+          <button onClick={handleExportProjectJson} style={styles.printButton}>
+            Save Project File
           </button>
 
-        <div style={{ textAlign: "center", marginTop: "10px" }}>
-  <label
-    style={{
-      ...styles.secondaryButton,
-      display: "inline-block",
-      fontSize: "16px",
-      cursor: "pointer",
-    }}
-  >
-    Import Project File
-    <input
-      type="file"
-      accept=".json"
-      onChange={handleImportProjectJson}
-      style={{ display: "none" }}
-    />
-  </label>
-</div>
-          <button style={styles.label}>
-            Open Saved Project
-            <select
-              value={selectedProjectName}
-              onChange={(e) => handleOpenProject(e.target.value)}
-              style={styles.input}
-            >
-              <option value="">Select saved project...</option>
-              {Object.keys(savedProjects).map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-         </button>
-
-          <button onClick={handleDeleteProject} style={styles.dangerButton}>
-            Delete Selected Project
+          <button
+            type="button"
+            onClick={() => document.getElementById("importProjectFileInput").click()}
+            style={styles.secondaryButton}
+          >
+            Open Project File
           </button>
+
+          <input
+            id="importProjectFileInput"
+            type="file"
+            accept=".json"
+            onChange={handleImportProjectJson}
+            style={{ display: "none" }}
+          />
 
           <button onClick={handleNewProject} style={styles.secondaryButton}>
             New Blank Project
-          </button>
-
-          <button onClick={handleReset} style={styles.dangerButton}>
-            Reset Current Editor
           </button>
         </Section>
 
@@ -780,9 +667,11 @@ const loadSelectedCrewForEditing = () => {
             <button onClick={addCrewFromLibrary} style={styles.secondaryButton}>
               Add Saved Crew Member
             </button>
+
             <button onClick={loadSelectedCrewForEditing} style={styles.secondaryButton}>
-            Load Selected Crew for Editing
+              Load Selected Crew for Editing
             </button>
+
             <button onClick={deleteCrewFromLibrary} style={styles.dangerButton}>
               Delete Selected Saved Crew
             </button>
@@ -796,10 +685,7 @@ const loadSelectedCrewForEditing = () => {
               <Input label="Phone" value={member.phone} onChange={(v) => updateCrew(index, "phone", v)} />
               <Textarea label="Responsibilities" value={member.responsibility} onChange={(v) => updateCrew(index, "responsibility", v)} />
 
-              <button
-                onClick={() => saveCrewMemberToLibrary(member)}
-                style={styles.secondaryButton}
-              >
+              <button onClick={() => saveCrewMemberToLibrary(member)} style={styles.secondaryButton}>
                 Save This Crew Member to Library
               </button>
 
@@ -1086,6 +972,8 @@ const styles = {
     background: "white",
     cursor: "pointer",
     fontWeight: "bold",
+    fontSize: 14,
+    textAlign: "center",
   },
   dangerButton: {
     padding: "10px 12px",
@@ -1204,3 +1092,4 @@ const styles = {
     fontWeight: "900",
   },
 };
+        
