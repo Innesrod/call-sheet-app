@@ -188,16 +188,79 @@ export default function App() {
     if (!confirm("Start a new blank project? Unsaved changes will be lost.")) return;
     loadProjectIntoEditor(createBlankProject());
   };
+const handleOpenCrewLibraryFile = (event) => {
+  const file = event.target.files[0];
 
-  const saveCrewMemberToLibrary = (member) => {
-    if (!member.name.trim()) {
-      alert("Enter a crew name before saving to library.");
-      return;
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    try {
+      const importedCrewLibrary = JSON.parse(e.target.result);
+
+      if (!Array.isArray(importedCrewLibrary)) {
+        alert("Invalid crew library file.");
+        return;
+      }
+
+      saveCrewLibrary(importedCrewLibrary);
+      setCrewLibrary(importedCrewLibrary);
+      alert("Crew library opened successfully.");
+    } catch (error) {
+      alert("Could not open crew library file.");
+      console.error(error);
     }
+  };
 
-    const existingIndex = crewLibrary.findIndex(
-      (saved) => saved.name.trim().toLowerCase() === member.name.trim().toLowerCase()
+  reader.readAsText(file);
+  event.target.value = "";
+};
+  const downloadCrewLibraryFile = (library) => {
+  const dataStr = JSON.stringify(library, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "CIF-Crew-Library.json";
+  link.click();
+
+  URL.revokeObjectURL(url);
+};
+
+const saveCrewMemberToLibrary = (member) => {
+  if (!member.name.trim()) {
+    alert("Enter a crew name before saving to library.");
+    return;
+  }
+
+  const existingIndex = crewLibrary.findIndex(
+    (saved) => saved.name.trim().toLowerCase() === member.name.trim().toLowerCase()
+  );
+
+  let updatedLibrary;
+
+  if (existingIndex >= 0) {
+    updatedLibrary = crewLibrary.map((saved, index) =>
+      index === existingIndex ? { ...member, id: saved.id } : saved
     );
+    alert(`${member.name} updated in crew library. Replace the shared Google Drive crew file with the downloaded version.`);
+  } else {
+    updatedLibrary = [
+      ...crewLibrary,
+      {
+        ...member,
+        id: Date.now() + Math.random(),
+      },
+    ];
+    alert(`${member.name} saved to crew library. Replace the shared Google Drive crew file with the downloaded version.`);
+  }
+
+  saveCrewLibrary(updatedLibrary);
+  setCrewLibrary(updatedLibrary);
+  downloadCrewLibraryFile(updatedLibrary);
+};
 
     let updatedLibrary;
 
@@ -646,62 +709,80 @@ export default function App() {
           </button>
         </Section>
 
-        <Section title="Crew / Vendors">
-          <div style={styles.card}>
-            <label style={styles.label}>
-              Add From Saved Crew Library
-              <select
-                value={selectedCrewLibraryId}
-                onChange={(e) => setSelectedCrewLibraryId(e.target.value)}
-                style={styles.input}
-              >
-                <option value="">Select crew member...</option>
-                {crewLibrary.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name || "Unnamed"} — {member.role || "No Role"}
-                  </option>
-                ))}
-              </select>
-            </label>
+       <Section title="Crew / Vendors">
+  <div style={styles.card}>
+    <h3 style={{ margin: 0 }}>Crew Library</h3>
 
-            <button onClick={addCrewFromLibrary} style={styles.secondaryButton}>
-              Add Saved Crew Member
-            </button>
+    <button
+      type="button"
+      onClick={() => document.getElementById("crewLibraryFileInput").click()}
+      style={styles.secondaryButton}
+    >
+      Open Crew Library
+    </button>
 
-            <button onClick={loadSelectedCrewForEditing} style={styles.secondaryButton}>
-              Load Selected Crew for Editing
-            </button>
+    <input
+      id="crewLibraryFileInput"
+      type="file"
+      accept=".json"
+      onChange={handleOpenCrewLibraryFile}
+      style={{ display: "none" }}
+    />
 
-            <button onClick={deleteCrewFromLibrary} style={styles.dangerButton}>
-              Delete Selected Saved Crew
-            </button>
-          </div>
+    <label style={styles.label}>
+      Select Saved Crew Member
+      <select
+        value={selectedCrewLibraryId}
+        onChange={(e) => setSelectedCrewLibraryId(e.target.value)}
+        style={styles.input}
+      >
+        <option value="">Select crew member...</option>
+        {crewLibrary.map((member) => (
+          <option key={member.id} value={member.id}>
+            {member.name || "Unnamed"} — {member.role || "No Role"}
+          </option>
+        ))}
+      </select>
+    </label>
 
-          {crew.map((member, index) => (
-            <div key={member.id} style={styles.card}>
-              <Input label="Name" value={member.name} onChange={(v) => updateCrew(index, "name", v)} />
-              <Input label="Role" value={member.role} onChange={(v) => updateCrew(index, "role", v)} />
-              <Input label="Call Time" value={member.callTime} onChange={(v) => updateCrew(index, "callTime", v)} />
-              <Input label="Phone" value={member.phone} onChange={(v) => updateCrew(index, "phone", v)} />
-              <Textarea label="Responsibilities" value={member.responsibility} onChange={(v) => updateCrew(index, "responsibility", v)} />
+    <button onClick={addCrewFromLibrary} style={styles.secondaryButton}>
+      Add Saved Crew Member
+    </button>
 
-              <button onClick={() => saveCrewMemberToLibrary(member)} style={styles.secondaryButton}>
-                Save This Crew Member to Library
-              </button>
+    <button onClick={loadSelectedCrewForEditing} style={styles.secondaryButton}>
+      Load Selected Crew for Editing
+    </button>
 
-              <button
-                onClick={() => setCrew((items) => (items.length > 1 ? items.filter((_, i) => i !== index) : items))}
-                style={styles.smallDangerButton}
-              >
-                Remove Crew
-              </button>
-            </div>
-          ))}
-          <button onClick={() => setCrew((items) => [...items, createCrewMember()])} style={styles.secondaryButton}>
-            + Add Crew
-          </button>
-        </Section>
+    <button onClick={deleteCrewFromLibrary} style={styles.dangerButton}>
+      Delete Selected Saved Crew
+    </button>
+  </div>
 
+  {crew.map((member, index) => (
+    <div key={member.id} style={styles.card}>
+      <Input label="Name" value={member.name} onChange={(v) => updateCrew(index, "name", v)} />
+      <Input label="Role" value={member.role} onChange={(v) => updateCrew(index, "role", v)} />
+      <Input label="Call Time" value={member.callTime} onChange={(v) => updateCrew(index, "callTime", v)} />
+      <Input label="Phone" value={member.phone} onChange={(v) => updateCrew(index, "phone", v)} />
+      <Textarea label="Responsibilities" value={member.responsibility} onChange={(v) => updateCrew(index, "responsibility", v)} />
+
+      <button onClick={() => saveCrewMemberToLibrary(member)} style={styles.secondaryButton}>
+        Save Crew Member
+      </button>
+
+      <button
+        onClick={() => setCrew((items) => (items.length > 1 ? items.filter((_, i) => i !== index) : items))}
+        style={styles.smallDangerButton}
+      >
+        Remove Crew from This Call Sheet
+      </button>
+    </div>
+  ))}
+
+  <button onClick={() => setCrew((items) => [...items, createCrewMember()])} style={styles.secondaryButton}>
+    + Add New Crew Member
+  </button>
+</Section>
         <Section title="Clients / Talent">
           {clients.map((client, index) => (
             <div key={client.id} style={styles.card}>
