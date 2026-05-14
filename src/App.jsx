@@ -262,28 +262,7 @@ const saveCrewMemberToLibrary = (member) => {
   downloadCrewLibraryFile(updatedLibrary);
 };
 
-    let updatedLibrary;
-
-    if (existingIndex >= 0) {
-      updatedLibrary = crewLibrary.map((saved, index) =>
-        index === existingIndex ? { ...member, id: saved.id } : saved
-      );
-      alert(`${member.name} updated in crew library.`);
-    } else {
-      updatedLibrary = [
-        ...crewLibrary,
-        {
-          ...member,
-          id: Date.now() + Math.random(),
-        },
-      ];
-      alert(`${member.name} saved to crew library.`);
-    }
-
-    saveCrewLibrary(updatedLibrary);
-    setCrewLibrary(updatedLibrary);
-  };
-
+   
   const addCrewFromLibrary = () => {
     if (!selectedCrewLibraryId) {
       alert("Select a saved crew member first.");
