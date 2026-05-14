@@ -731,7 +731,7 @@ export default function App() {
         <div style={styles.previewHeader}>
           <div>
             <div style={styles.eyebrow}>Production Call Sheet</div>
-            <h1 style={styles.previewTitle}>{projectName || "Project Name"}</h1>
+            <h1 style={styles.previewTitle}>{projectName || "Session Name"}</h1>
             <div style={styles.headerMetaRow}>
               <span><strong>Client:</strong> {clientName || "Client Name"}</span>
               <span><strong>Shoot Days:</strong> {shootDays.length}</span>
