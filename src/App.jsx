@@ -750,7 +750,7 @@ const saveCrewMemberToLibrary = (member) => {
       </button>
 
       <button
-        onClick={() => setCrew((items) => (items.length > 1 ? items.filter((_, i) => i !== index) : items))}
+        onClick={() => setCrew((items) => items.filter((_, i) => i !== index))}
         style={styles.smallDangerButton}
       >
         Remove Crew from This Call Sheet
