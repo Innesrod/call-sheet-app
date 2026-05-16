@@ -880,10 +880,19 @@ const saveCrewMemberToLibrary = (member) => {
 }
 
 function Section({ title, children }) {
+  const [isOpen, setIsOpen] = useState(true);
+
   return (
     <div style={styles.section}>
-      <h2>{title}</h2>
-      <div style={styles.sectionBody}>{children}</div>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        style={styles.sectionHeaderButton}
+      >
+        <span>{isOpen ? "▼" : "▶"} {title}</span>
+      </button>
+
+      {isOpen && <div style={styles.sectionBody}>{children}</div>}
     </div>
   );
 }
@@ -971,6 +980,18 @@ const styles = {
     boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
   },
   sectionBody: { display: "flex", flexDirection: "column", gap: 12 },
+  sectionHeaderButton: {
+  width: "100%",
+  border: "none",
+  background: "transparent",
+  padding: 0,
+  margin: 0,
+  textAlign: "left",
+  fontSize: 22,
+  fontWeight: "bold",
+  color: "#0f172a",
+  cursor: "pointer",
+},
   label: {
     display: "flex",
     flexDirection: "column",
