@@ -880,7 +880,7 @@ const saveCrewMemberToLibrary = (member) => {
 }
 
 function Section({ title, children }) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div style={styles.section}>
