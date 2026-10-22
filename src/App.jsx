@@ -368,6 +368,17 @@ const saveCrewMemberToLibrary = (member) => {
     ));
   };
 
+  const moveCallTime = (itemIndex, direction) => {
+    setShootDays((days) => days.map((day, index) => {
+      if (index !== activeDayIndex) return day;
+      const calls = [...(day.callTimes || [])];
+      const targetIndex = itemIndex + direction;
+      if (targetIndex < 0 || targetIndex >= calls.length) return day;
+      [calls[itemIndex], calls[targetIndex]] = [calls[targetIndex], calls[itemIndex]];
+      return { ...day, callTimes: calls };
+    }));
+  };
+
   const removeCallTime = (itemIndex) => {
     setShootDays((days) => days.map((day, index) =>
       index === activeDayIndex
@@ -671,6 +682,10 @@ const saveCrewMemberToLibrary = (member) => {
                 <Input label="Call Time" value={call.time} onChange={(v) => updateCallTime(index, "time", v)} />
                 <Input label="Name" value={call.name} onChange={(v) => updateCallTime(index, "name", v)} />
                 <Input label="Location" value={call.location} onChange={(v) => updateCallTime(index, "location", v)} />
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <button type="button" onClick={() => moveCallTime(index, -1)} disabled={index === 0} style={styles.secondaryButton}>↑ Move Up</button>
+                  <button type="button" onClick={() => moveCallTime(index, 1)} disabled={index === (activeDay.callTimes || []).length - 1} style={styles.secondaryButton}>↓ Move Down</button>
+                </div>
                 <button type="button" onClick={() => removeCallTime(index)} style={styles.smallDangerButton}>Remove Call Time</button>
               </div>
             ))}
