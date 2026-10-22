@@ -1,118 +1,96 @@
-  dangerButton: {
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: "1px solid #fecaca",
-    background: "#fff1f2",
-    color: "#be123c",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-  smallDangerButton: {
-    padding: "8px 10px",
-    borderRadius: 10,
-    border: "1px solid #fecaca",
-    background: "#fff1f2",
-    color: "#be123c",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-  printButton: {
-    padding: "14px 18px",
-    borderRadius: 16,
-    background: "#0f172a",
-    color: "white",
-    border: "none",
-    fontWeight: "bold",
-    cursor: "pointer",
-    fontSize: 16,
-  },
-  preview: {
-    background: "white",
-    width: "8.5in",
-    maxWidth: "100%",
-    padding: "0.5in",
-    boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
-    alignSelf: "start",
-    boxSizing: "border-box",
-  },
-  previewHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 24,
-    borderBottom: "8px solid #020617",
-    paddingBottom: 24,
-  },
-  eyebrow: {
-    fontSize: 11,
-    fontWeight: "900",
-    textTransform: "uppercase",
-    letterSpacing: 3,
-    color: "#64748b",
-  },
-  previewTitle: { fontSize: 34, margin: "8px 0", color: "#020617", letterSpacing: -0.8 },
-  headerMetaRow: { display: "flex", gap: 20, fontSize: 14, color: "#334155", marginTop: 6 },
-  logoBox: {
-    width: 90,
-    height: 90,
-    background: "#020617",
-    color: "white",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: "900",
-    fontSize: 28,
-    borderRadius: 16,
-  },
-  logoPreview: {
-    maxWidth: 160,
-    maxHeight: 80,
-    objectFit: "contain",
-    border: "1px solid #e2e8f0",
-    borderRadius: 12,
-    padding: 8,
-  },
-  logoImage: { maxWidth: 170, maxHeight: 95, objectFit: "contain" },
-  daySection: { marginTop: 34 },
-  dayHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: 24,
-    borderBottom: "2px solid #020617",
-    paddingBottom: 14,
-    marginBottom: 16,
-  },
-  dayTitle: { margin: "4px 0 0 0", fontSize: 28 },
-  dayMeta: { textAlign: "right", fontSize: 14, color: "#334155", lineHeight: 1.6 },
-  peopleSection: { marginTop: 38 },
-  previewSectionTitle: {
-    borderBottom: "4px solid #020617",
-    paddingBottom: 8,
-    marginBottom: 16,
-    fontSize: 24,
-  },
-  locationCard: {
-    border: "1px solid #e2e8f0",
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-    background: "#f8fafc",
-    lineHeight: 1.5,
-  },
-  table: { width: "100%", borderCollapse: "collapse", fontSize: 14 },
-  th: {
-    textAlign: "left",
-    background: "#020617",
-    color: "white",
-    padding: "10px 12px",
-    fontSize: 12,
-    textTransform: "uppercase",
-  },
-  td: { borderTop: "1px solid #e2e8f0", padding: "10px 12px", verticalAlign: "top" },
-  tdStrong: {
-    borderTop: "1px solid #e2e8f0",
-    padding: "10px 12px",
-    verticalAlign: "top",
-    fontWeight: "900",
-  },
-};
-        
+import React, { useState } from "react";
+import html2pdf from "html2pdf.js";
+
+const CREW_LIBRARY_KEY = "cif-call-sheet-crew-library-v1";
+const LAST_PROJECT_KEY = "cif-call-sheet-last-project-v1";
+
+function createDay(number) {
+  return {
+    id: Date.now() + Math.random(),
+    label: `Day ${number}`,
+    date: "",
+    callTime: "8:30 AM",
+    lunch: "",
+    wrap: "",
+    weatherLocation: "",
+    weatherTemp: "",
+    weatherConditions: "",
+    sunTimes: "",
+    schedule: [
+      { time: "8:30 AM", activity: "Crew Call / Load In", location: "", notes: "" },
+      { time: "11:00 AM", activity: "Room Ready", location: "", notes: "" },
+    ],
+  };
+}
+
+const createCrewMember = () => ({
+  id: Date.now() + Math.random(),
+  name: "",
+  role: "",
+  callTime: "",
+  phone: "",
+  responsibility: "",
+});
+
+const createClient = () => ({
+  id: Date.now() + Math.random(),
+  name: "",
+  role: "",
+  callTime: "",
+  contact: "",
+  notes: "",
+});
+
+const createLocation = () => ({
+  id: Date.now() + Math.random(),
+  name: "",
+  address: "",
+  parking: "",
+  loadIn: "",
+  notes: "",
+});
+
+const createAttachment = () => ({
+  id: Date.now() + Math.random(),
+  name: "",
+  url: "",
+  notes: "",
+});
+
+const getMapLink = (address) =>
+  address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : "";
+
+function loadCrewLibrary() {
+  try {
+    const saved = localStorage.getItem(CREW_LIBRARY_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCrewLibrary(library) {
+  localStorage.setItem(CREW_LIBRARY_KEY, JSON.stringify(library));
+}
+
+function formatDate(value) {
+  if (!value) return "Shoot Date TBD";
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return "Shoot Date TBD";
+  return date.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function createBlankProject() {
+  return {
+    projectName: "",
+    clientName: "",
+    logo: "",
+    shootDays: [createDay(1)],
+    crew: [{ ...createCrewMember(), role: "DP / Producer", callTime: "8:30 AM" }],
+    clients: [{ ...createClient(), role: "Client Contact", callTime: "No Call" }],
+    locations: [{ ...createLocation(), name: "Main Location" }],
