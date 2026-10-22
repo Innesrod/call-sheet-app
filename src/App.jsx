@@ -10,6 +10,7 @@ function createDay(number) {
     label: `Day ${number}`,
     date: "",
     callTime: "8:30 AM",
+    callTimes: [{ time: "8:30 AM", name: "Production Crew", location: "" }],
     lunch: "",
     wrap: "",
     weatherLocation: "",
@@ -131,7 +132,12 @@ export default function App() {
     setProjectName(project.projectName || "");
     setClientName(project.clientName || "");
     setLogo(project.logo || "");
-    setShootDays(project.shootDays || [createDay(1)]);
+    setShootDays((project.shootDays || [createDay(1)]).map((day) => ({
+      ...day,
+      callTimes: Array.isArray(day.callTimes)
+        ? day.callTimes
+        : [{ time: day.callTime || "", name: "Production Crew", location: "" }],
+    })));
     setCrew(project.crew || []);
     setClients(project.clients || []);
     setLocations(project.locations || []);
@@ -342,6 +348,32 @@ const saveCrewMemberToLibrary = (member) => {
         index === activeDayIndex ? { ...day, [field]: value } : day
       )
     );
+  };
+
+  const updateCallTime = (itemIndex, field, value) => {
+    setShootDays((days) => days.map((day, index) =>
+      index === activeDayIndex
+        ? { ...day, callTimes: (day.callTimes || []).map((item, i) =>
+            i === itemIndex ? { ...item, [field]: value } : item
+          ) }
+        : day
+    ));
+  };
+
+  const addCallTime = () => {
+    setShootDays((days) => days.map((day, index) =>
+      index === activeDayIndex
+        ? { ...day, callTimes: [...(day.callTimes || []), { time: "", name: "", location: "" }] }
+        : day
+    ));
+  };
+
+  const removeCallTime = (itemIndex) => {
+    setShootDays((days) => days.map((day, index) =>
+      index === activeDayIndex
+        ? { ...day, callTimes: (day.callTimes || []).filter((_, i) => i !== itemIndex) }
+        : day
+    ));
   };
 
   const updateScheduleItem = (itemIndex, field, value) => {
@@ -628,9 +660,22 @@ const saveCrewMemberToLibrary = (member) => {
         <Section title={`Active Day: ${activeDay.label}`}>
           <Input label="Day Label" value={activeDay.label} onChange={(v) => updateDay("label", v)} />
           <Input label="Shoot Date" type="date" value={activeDay.date} onChange={(v) => updateDay("date", v)} />
-          <Input label="Crew Call" value={activeDay.callTime} onChange={(v) => updateDay("callTime", v)} />
+
           <Input label="Lunch" value={activeDay.lunch} onChange={(v) => updateDay("lunch", v)} />
           <Input label="Wrap" value={activeDay.wrap} onChange={(v) => updateDay("wrap", v)} />
+
+          <div style={styles.weatherBox}>
+            <h3 style={styles.weatherTitle}>Call Times</h3>
+            {(activeDay.callTimes || []).map((call, index) => (
+              <div key={index} style={styles.card}>
+                <Input label="Call Time" value={call.time} onChange={(v) => updateCallTime(index, "time", v)} />
+                <Input label="Name" value={call.name} onChange={(v) => updateCallTime(index, "name", v)} />
+                <Input label="Location" value={call.location} onChange={(v) => updateCallTime(index, "location", v)} />
+                <button type="button" onClick={() => removeCallTime(index)} style={styles.smallDangerButton}>Remove Call Time</button>
+              </div>
+            ))}
+            <button type="button" onClick={addCallTime} style={styles.secondaryButton}>+ Add Call Time</button>
+          </div>
 
           <div style={styles.weatherBox}>
             <h3 style={styles.weatherTitle}>Weather</h3>
@@ -837,10 +882,19 @@ const saveCrewMemberToLibrary = (member) => {
                 <h2 style={styles.dayTitle}>{formatDate(day.date)}</h2>
               </div>
               <div style={styles.dayMeta}>
-                <div><strong>Crew Call:</strong> {day.callTime || "TBD"}</div>
                 <div><strong>Lunch:</strong> {day.lunch || "TBD"}</div>
                 <div><strong>Wrap:</strong> {day.wrap || "TBD"}</div>
               </div>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <h3 style={{ margin: "0 0 8px" }}>Call Times</h3>
+              <Table
+                headers={["Call Time", "Name", "Location"]}
+                rows={(day.callTimes || (day.callTime ? [{ time: day.callTime, name: "Production Crew", location: "" }] : [])).map(
+                  (call) => [call.time, call.name, call.location]
+                )}
+              />
             </div>
 
             <div style={styles.previewWeatherBox}>
